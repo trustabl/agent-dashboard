@@ -25,7 +25,9 @@ test('Overview: header, tiles, toolbar, filters, repo table, tool links, expande
   const filter = page.getByRole('combobox', { name: 'Filter repos' })
   await expect(filter.locator('option')).toHaveText([/^All repos \(\d+\)$/, /^Has open findings \(\d+\)$/, /^Stale or missing tool \(\d+\)$/, /^OTel gap \(\d+\)$/])
 
-  for (const h of ['Repo', 'Stack', 'Forge', 'Analyzer', 'Probe', 'Issues']) await expect(page.getByRole('columnheader', { name: h, exact: true })).toBeVisible()
+  // Scoped to the repo table: the run log below it has its own "Repo" column.
+  const table = page.getByRole('table', { name: 'Repos' })
+  for (const h of ['Repo', 'Stack', 'Forge', 'Analyzer', 'Probe', 'Issues']) await expect(table.getByRole('columnheader', { name: h, exact: true })).toBeVisible()
   const acme = page.getByTestId('overview-row-acme-support')
   const research = page.getByTestId('overview-row-research-tools')
   await expect(acme).toContainText(/ready/)
@@ -53,8 +55,10 @@ test('Overview: header, tiles, toolbar, filters, repo table, tool links, expande
   await expect(page.getByText(/Agents \d+ · tools \d+ · MCP \d+/)).toBeVisible()
   await expect(page.getByText('Latest runs', { exact: true })).toBeVisible()
   await expect(page.getByText('Next', { exact: true })).toBeVisible()
-  await expect(page.getByRole('button', { name: 'Rescan' })).toBeVisible()
-  await expect(page.getByRole('button', { name: 'Re-probe' })).toBeVisible()
+  // Inventory panel actions (the "Next" panel may offer Rescan too).
+  const inventory = page.getByText('Inventory', { exact: true }).locator('..')
+  for (const b of ['Rescan', 'Re-probe']) await expect(inventory.getByRole('button', { name: b, exact: true })).toBeVisible()
+  await expect(inventory.getByRole('button', { name: /^(Regenerate|Generate skill)$/ })).toBeVisible()
 
   // Repo detail.
   await page.getByRole('link', { name: 'Open repo' }).click()
