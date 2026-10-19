@@ -16,6 +16,8 @@ const dockerUp = (() => {
   }
 })()
 const LLM = 'http://127.0.0.1:9/v1'
+/** A control whose action is signing, binding or pushing a policy. */
+const SIGN_BIND_PUSH = /^(sign|bind|push|publish|issue)\b/i
 
 async function ensureScanned(request: Parameters<typeof apiRun>[0], name: string) {
   const repos = (await (await request.get('/api/repositories')).json()).repositories as { id: string; name: string }[]
@@ -76,8 +78,11 @@ test('Probe: table, untested grant set, runner check, no sign/bind/push', async 
   await expect(dialog.getByTestId('runner-check')).toContainText(/✓ OpenShell|✗ OpenShell .* Fix: /)
   await dialog.getByRole('button', { name: 'Cancel' }).click()
 
-  // Drafts stay unsigned: nothing on this page signs, binds or pushes.
-  await expect(page.getByRole('button', { name: /\b(sign|bind|push)\b/i })).toHaveCount(0)
+  // Drafts stay unsigned: no control on this page signs, binds or pushes.
+  // (Matched on the action name; Copy CLI buttons are named after their
+  // command, which contains the CLI flag --no-sign.)
+  await expect(page.getByRole('button', { name: SIGN_BIND_PUSH })).toHaveCount(0)
+  await expect(page.getByRole('link', { name: SIGN_BIND_PUSH })).toHaveCount(0)
 })
 
 test('Probe: Analyzer grant set run → profile, egress, extras apart, artifacts', async ({ page }) => {

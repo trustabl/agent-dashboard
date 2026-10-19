@@ -18,7 +18,8 @@ test('Overview: header, tiles, toolbar, filters, repo table, tool links, expande
 
   for (const t of ['Repos', 'Open findings', 'OTel profile', 'Probe drafts']) await expect(page.getByText(t, { exact: true }).first()).toBeVisible()
   await expect(page.getByText(/\d+ not yet forged/)).toBeVisible()
-  await expect(page.getByText(/grant sets? untested/)).toBeVisible()
+  // The tile ("1 grant set untested"), not the Probe cell's "grant set untested".
+  await expect(page.getByText(/^\d+ grant sets? untested$/)).toBeVisible()
   for (const b of ['Generate skill', 'Scan repo', 'Run Probe']) await expect(page.getByRole('button', { name: b }).first()).toBeVisible()
 
   const filter = page.getByRole('combobox', { name: 'Filter repos' })

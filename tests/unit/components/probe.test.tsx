@@ -119,7 +119,7 @@ describe('Probe table', () => {
     expect(screen.queryByText('Observed egress not on the declared allow list')).not.toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: 'View network_policies.draft.yaml' }))
     expect(onView).toHaveBeenCalledWith('run-probe-strict', 'network_policies.draft.yaml', 'research-tools')
-    expect(screen.queryByRole('button', { name: /\b(sign|bind|push)\b/i })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /^(sign|bind|push|publish|issue)\b/i })).not.toBeInTheDocument()
   })
 
   it('offers Run Probe and Copy CLI on an untested Analyzer grant set', () => {
