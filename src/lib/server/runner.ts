@@ -305,3 +305,12 @@ export function failureText(stdout: string, stderr: string, code: number | null,
   const head = signal ? `Exited on ${signal}.` : `Exited with code ${code}.`
   return tail ? `${head}\n${tail}` : head
 }
+
+/** Close a run created with recordRun (no subprocess). */
+export function finishRecordedRun(id: string, status: RunStatus, patch: { summary?: Record<string, unknown>; error?: string | null; rulesSha?: string | null; toolVersion?: string | null }) {
+  const run = getRun(id)
+  if (!run) return
+  db()
+    .prepare('UPDATE runs SET status = ?, error = ?, summary = ?, rules_sha = COALESCE(?, rules_sha), tool_version = COALESCE(?, tool_version), finished_at = ? WHERE id = ?')
+    .run(status, patch.error ?? null, JSON.stringify({ ...run.summary, ...(patch.summary ?? {}) }), patch.rulesSha ?? null, patch.toolVersion ?? null, Date.now(), id)
+}
