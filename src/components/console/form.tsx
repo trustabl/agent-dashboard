@@ -5,7 +5,7 @@ import { useId, type ReactNode } from 'react'
 // 42px inputs, reskinned select chevron) with the design tokens.
 
 const control = [
-  'w-full rounded-(--radius-sharp) border border-(--color-border-muted) bg-(--color-bg-surface)',
+  'w-full rounded-(--radius-sharp) border border-(--color-border-control) bg-(--color-bg-surface)',
   'text-base text-(--color-text-primary) placeholder:text-(--color-text-tertiary)',
   'transition-[border-color] duration-150 ease',
   'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--color-border-focus)',

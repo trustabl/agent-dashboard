@@ -284,3 +284,20 @@ body {
   --color-neutral-text: #5C5E72;        /* 5.8:1 on neutral-bg */
   --color-neutral-bg: #F4F5F8;
 }
+
+/* Form-field boundaries (WCAG 1.4.11, 3:1 for what identifies a control).
+   The base tokens draw inputs and selects in --color-border-muted: ≈ 1.2:1 dark,
+   ≈ 1.5:1 light. Fields use this stronger neutral instead; table, card and
+   divider borders keep --color-border-muted (decorative, not a control). */
+:root { --color-border-control: #6B6E87; }  /* 3.4–3.8:1 on page/surface/raised */
+[data-theme="light"] { --color-border-control: #80849A; }  /* 3.2–3.7:1 */
+
+/* Focus indicator (WCAG 2.4.7 / 1.4.11). The base tokens draw it in
+   --color-border-focus (#363A52 on #0F1117 ≈ 1.7:1, hard to see). The Console
+   uses the accent instead: ≈ 10:1 dark, ≈ 3.3:1 light. Applies to every
+   control, overriding the per-component outline colour. */
+:root { --color-focus-ring: var(--color-accent-default); }
+*:focus-visible {
+  outline: 2px solid var(--color-focus-ring) !important;
+  outline-offset: 2px;
+}
