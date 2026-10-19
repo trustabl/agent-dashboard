@@ -1,0 +1,7 @@
+# Secret scan config (CI job "secrets", `make secrets`). Default rules, no
+# path is exempt. Add an allowlist entry only for a value proven to be fake,
+# with a comment saying where it comes from.
+title = "trustabl-console"
+
+[extend]
+useDefault = true

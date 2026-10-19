@@ -19,6 +19,8 @@ installing any of them.
 
 ## First run (≈ 5 minutes)
 
+[![CI](https://github.com/trustabl/trustabl-console/actions/workflows/ci.yml/badge.svg)](https://github.com/trustabl/trustabl-console/actions/workflows/ci.yml)
+
 Requirements: macOS, Linux or WSL2, with `git`, `curl`, `tar` and `make`.
 You need Node.js 22.13 or newer; if you don't have it, `make run` installs a
 private copy. To run Probe you also need Docker (or OpenShell) and an
@@ -72,7 +74,9 @@ This deletes everything above. On macOS it also deletes the CLIs' caches in
 ```sh
 make dev            # hot reload on 127.0.0.1:4317
 make check          # eslint + tsc + vitest
-make e2e            # Playwright against tests/fixtures/repos
+make e2e            # Playwright against tests/fixtures/repos (Probe cases need Docker)
+make parity         # artifacts from a Console run == the same CLI run (timestamps masked)
+make secrets        # gitleaks, as in CI
 ```
 
 Contributions: [`CONTRIBUTING.md`](CONTRIBUTING.md).

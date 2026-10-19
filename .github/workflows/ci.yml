@@ -1,0 +1,103 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  secrets:
+    name: Secret scan (gitleaks)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Install gitleaks 8.18.4
+        run: |
+          curl -fsSL -o /tmp/gitleaks.tgz https://github.com/gitleaks/gitleaks/releases/download/v8.18.4/gitleaks_8.18.4_linux_x64.tar.gz
+          tar -xzf /tmp/gitleaks.tgz -C /tmp gitleaks
+          sudo install /tmp/gitleaks /usr/local/bin/gitleaks
+      - name: Scan working tree and full history
+        run: gitleaks detect --source . --redact --config .gitleaks.toml --verbose
+
+  checks:
+    name: Lint, typecheck, unit tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.22.0
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - run: make lint
+      - run: make typecheck
+      - run: make test
+
+  e2e:
+    name: End-to-end (Playwright) + artifact parity
+    runs-on: ubuntu-latest
+    needs: checks
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.22.0
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - run: npx playwright install --with-deps chromium
+      - name: Pre-pull Probe's sandbox image
+        run: docker pull python:3-slim
+      - name: Artifact parity (Console run == CLI run)
+        run: make parity
+      - name: Playwright
+        run: make e2e
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 7
+
+  one-command-start:
+    name: make run on a clean ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    needs: checks
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Use a fresh Console home
+        run: echo "TRUSTABL_CONSOLE_HOME=$RUNNER_TEMP/console-home" >> "$GITHUB_ENV"
+      - name: Start with one command and wait for the API
+        run: |
+          (make run > run.log 2>&1 &)
+          for i in $(seq 1 120); do
+            if curl -fsS http://127.0.0.1:4317/api/status > status.json 2>/dev/null; then break; fi
+            sleep 5
+          done
+          cat status.json
+          node -e 'const s=require("./status.json"); const t=Object.values(s.tools); if(!t.length||!t.every(x=>x.installed)) { console.error("pinned CLIs missing", s.tools); process.exit(1) }'
+      - name: Listens on localhost only
+        run: |
+          IP=$(node -e 'const o=require("os").networkInterfaces();for(const l of Object.values(o))for(const a of l)if(a.family==="IPv4"&&!a.internal){console.log(a.address);process.exit(0)}')
+          if [ -n "$IP" ] && curl -fsS --max-time 5 "http://$IP:4317/api/status" >/dev/null 2>&1; then echo "reachable on $IP"; exit 1; fi
+          echo "not reachable on ${IP:-<none>}: ok"
+      - name: Wipe removes all state
+        run: |
+          WIPE_YES=1 make wipe
+          test ! -e "$TRUSTABL_CONSOLE_HOME"
+      - if: failure()
+        run: tail -100 run.log
