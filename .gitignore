@@ -1,0 +1,24 @@
+# dependencies
+node_modules/
+
+# build
+.next/
+out/
+next-env.d.ts
+*.tsbuildinfo
+
+# local state (never commit)
+.data/
+.trustabl-console/
+.env
+.env.*
+!.env.example
+
+# tests
+test-results/
+playwright-report/
+coverage/
+tests/.tmp/
+
+# os
+.DS_Store
