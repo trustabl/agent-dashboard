@@ -1,0 +1,286 @@
+@import "tailwindcss";
+@config "../../tailwind.config.ts";
+@source not "../../**/*.md";
+
+:root {
+  --rounded-standard: 15px;
+
+  /* Primitive tokens — from web2 tr-design-system.md */
+  --primitive-neutral-0:   #FFFFFF;
+  --primitive-neutral-50:  #F0F1F5;
+  --primitive-neutral-100: #9899A8;
+  --primitive-neutral-200: #88899D;
+  --primitive-neutral-300: #3A3D52;
+  --primitive-neutral-400: #222536;
+  --primitive-neutral-500: #1A1D27;
+  --primitive-neutral-600: #161923;
+  --primitive-neutral-700: #13151D;
+  --primitive-neutral-800: #0F1117;
+
+  --primitive-teal-400: #2DD4BF;
+  --primitive-teal-500: #1ABCAA;
+  --primitive-sky-600:  #0EA5E9;
+  --primitive-teal-900: #0C2B2E;
+  --primitive-sky-800:  #1A4D6E;
+
+  --primitive-green-400: #4ADE80;
+  --primitive-green-900: #0C1F12;
+  --primitive-amber-400: #FBBF24;
+  --primitive-amber-900: #1C160A;
+  --primitive-red-400:   #F87171;
+  --primitive-red-500:   #2A1010;
+  --primitive-red-800:   #7F2020;
+  --primitive-red-900:   #1C0F0F;
+
+  /* Module 2 task 2.5, added 2026-08-21: a 4th severity hue ("medium"),
+     validated with the dataviz skill's validate_palette.js — the existing
+     danger/warning/info trio alone (without medium) already fails the
+     dark-mode lightness band and light-mode normal-vision floor; adding
+     medium as a plain warning-text reuse was never viable. Blue is the one
+     hue with room on the wheel once red/amber/teal/green are already
+     spoken for. */
+  --primitive-blue-400: #60A5FA;
+  --primitive-blue-900: #0F1E3D;
+
+  --primitive-space-4:  4px;
+  --primitive-space-8:  8px;
+  --primitive-space-12: 12px;
+  --primitive-space-16: 16px;
+  --primitive-space-24: 24px;
+  --primitive-space-32: 32px;
+  --primitive-space-48: 48px;
+  --primitive-space-64: 64px;
+
+  --primitive-radius-8:    8px;
+  --primitive-radius-10:   10px;
+  --primitive-radius-12:   12px;
+  --primitive-radius-15:   15px;
+  --primitive-radius-9999: 9999px;
+
+  /* Semantic tokens — Dark Mode (default) */
+  --color-bg-page:      var(--primitive-neutral-800);
+  --color-bg-surface:   var(--primitive-neutral-700);
+  --color-bg-overlay:   var(--primitive-neutral-600);
+  --color-bg-raised:    var(--primitive-neutral-500);
+
+  /* Deliberately reverted to --primitive-neutral-400 (#222536) on
+     2026-09-22, by explicit design decision — not a regression. History,
+     for whoever finds this next: #222536 (1.20:1) was flagged as
+     near-invisible and changed to --primitive-neutral-300 (#3A3D52,
+     1.71:1) on 2026-08-24, then pushed further to #65677B (~3.3:1, just
+     past WCAG 1.4.11's 3:1) after a 2026-09-21 design review called it
+     "barely noticeable," then further still to --primitive-neutral-200
+     (#88899D, ~5.3:1). Design then asked explicitly to go back to
+     #222536 anyway, confirmed against the same near-invisible-contrast
+     tradeoff that motivated every prior change — treat this as the
+     current intended value, not something to "fix" again without
+     checking with design first. */
+  --color-border-muted: var(--primitive-neutral-400);
+  --color-border-focus: #363A52;
+
+  --color-text-primary:   var(--primitive-neutral-50);
+  --color-text-secondary: var(--primitive-neutral-100);
+  --color-text-tertiary:  var(--primitive-neutral-200);
+  --color-text-disabled:  var(--primitive-neutral-300);
+
+  --color-accent-default: var(--primitive-teal-400);
+  --color-accent-hover:   var(--primitive-teal-500);
+  --color-accent-active:  var(--primitive-sky-600);
+  --color-accent-subtle:  var(--primitive-teal-900);
+  --color-accent-border:  var(--primitive-sky-800);
+
+  --color-ai-text: #A78BFA;
+  --color-ai-bg:   rgba(109, 40, 217, 0.18);
+  --color-ai-glow: rgba(109, 40, 217, 0.08);
+
+  --color-danger-text:   var(--primitive-red-400);
+  --color-danger-bg:     var(--primitive-red-900);
+  --color-danger-hover:  var(--primitive-red-500);
+  --color-danger-border: var(--primitive-red-800);
+  --color-success-text:  var(--primitive-green-400);
+  --color-success-bg:    var(--primitive-green-900);
+  --color-warning-text:  var(--primitive-amber-400);
+  --color-warning-bg:    var(--primitive-amber-900);
+  --color-info-text:     var(--primitive-teal-400);
+  --color-info-bg:       var(--primitive-teal-900);
+  --color-neutral-text:  var(--primitive-neutral-100);
+  --color-neutral-bg:    var(--primitive-neutral-700);
+  --color-medium-text:   var(--primitive-blue-400);
+  --color-medium-bg:     var(--primitive-blue-900);
+
+  /* Chart-fill severity colors — deliberately separate from the
+     danger/warning/medium/info *-text tokens above. Those are calibrated
+     for small text/badge contrast on a dark surface (bright, high-lightness);
+     a chart fill needs the OKLCH lightness band validate_palette.js checks
+     for (0.48–0.67 dark / 0.43–0.77 light), which the text tokens fail on
+     their own, per useChartTheme.ts's doc comment. Same hue families
+     (red/amber/blue/teal), different lightness tier — same relationship
+     *-bg already has to *-text for every other semantic color above.
+     Validated as a full 4-way categorical set, not per-color. */
+  --color-chart-severity-critical: #DC2626;
+  --color-chart-severity-high:     #C08000;
+  --color-chart-severity-medium:   #2563EB;
+  --color-chart-severity-low:      #0D9488;
+
+  --space-tight:   var(--primitive-space-4);
+  --space-inner:   var(--primitive-space-8);
+  --space-base:    var(--primitive-space-16);
+  --space-section: var(--primitive-space-24);
+  --space-layout:  var(--primitive-space-48);
+  --space-page:    var(--primitive-space-64);
+
+  --radius-sharp: var(--primitive-radius-8);
+  --radius-base:  var(--primitive-radius-12);
+  --radius-card:  var(--primitive-radius-15);
+  --radius-pill:  var(--primitive-radius-9999);
+
+  --shadow-card:  0 1px 3px rgba(0,0,0,0.3);
+  --shadow-float: 0 4px 12px rgba(0,0,0,0.4);
+  --shadow-modal: 0 8px 32px rgba(0,0,0,0.5);
+
+  --z-base:     0;
+  --z-overlay:  10;
+  --z-dropdown: 20;
+  --z-modal:    30;
+  --z-toast:    40;
+  --z-critical: 50;
+
+  --color-backdrop: rgba(0,0,0,0.6);
+
+  --duration-fast:  100ms;
+  --duration-base:  150ms;
+  --duration-slow:  250ms;
+  --duration-enter: 200ms;
+  --duration-exit:  150ms;
+  --ease-default: ease;
+  --ease-enter:   cubic-bezier(0.2, 0, 0, 1);
+  --ease-exit:    cubic-bezier(0.4, 0, 1, 1);
+}
+
+[data-theme="light"] {
+  --color-bg-page:      #F8F9FB;
+  --color-bg-surface:   #FFFFFF;
+  --color-bg-overlay:   #F4F5F8;
+  --color-bg-raised:    #EDEEF2;
+  /* Was #E2E4EC (1.27:1 against #FFFFFF card surfaces) — measured
+     2026-08-24 after a direct report that card borders were barely
+     visible in light mode. Four rounds of "lighter"/"too dark" feedback:
+     #8B8FA8 (3.19:1) too heavy → #A8ABC2 (2.27:1) too dark → #BCBFD2
+     (1.82:1) too dark → #CACDDD (1.58:1) still too dark. Landed on
+     #D2D5E2 (1.46:1 against surface / 1.39:1 against page) — one more
+     deliberate step toward the original #E2E4EC (1.27:1), not all the
+     way back to it: still a real ~15% contrast gain, confirmed as the
+     intended direction (one more step, not "back to invisible") before
+     applying. Same cool blue-gray hue family throughout (and as
+     --color-border-focus below). If still too dark, there is very
+     little room left before this is indistinguishable from the
+     original complaint. */
+  --color-border-muted: #D2D5E2;
+  --color-border-focus: #C8CADE;
+  --color-text-primary:   #0F1117;
+  --color-text-secondary: #5C5E72;
+  --color-text-tertiary:  #636477;
+  --color-text-disabled:  #C8CADE;
+  --color-accent-default: #1A9E72;
+  --color-accent-hover:   #158F68;
+  --color-accent-subtle:  #E0F4FD;
+  --color-accent-border:  #BAE6FD;
+  --color-ai-text: #7C3AED;
+  --color-ai-bg:   #EDE4FB;
+  --color-ai-glow: rgba(124, 58, 237, 0.06);
+  --color-danger-text:   #DC2626;
+  --color-danger-bg:     #FEF2F2;
+  --color-danger-border: #FECACA;
+  --color-success-text: #16A34A;
+  --color-success-bg:   #F0FDF4;
+  --color-warning-text: #D97706;
+  --color-warning-bg:   #FFFBEB;
+  --color-info-text: #2DD4BF;
+  --color-info-bg:   #D0F5EB;
+  --color-medium-text: #2563EB;
+  --color-medium-bg:   #EFF6FF;
+  --color-backdrop:  rgba(0,0,0,0.4);
+
+  /* See :root's comment — same chart-fill/text-tier rationale, light-mode
+     values. Validated as a full 4-way set against a #FFFFFF surface. */
+  --color-chart-severity-critical: #DC2626;
+  --color-chart-severity-high:     #DB8B00;
+  --color-chart-severity-medium:   #2563EB;
+  --color-chart-severity-low:      #0D9488;
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-border-focus);
+  outline-offset: 2px;
+}
+
+@keyframes shimmer {
+  0%   { background-position: -400px 0; }
+  100% { background-position:  400px 0; }
+}
+
+@keyframes fadeScale {
+  from { opacity: 0; transform: scale(0.95); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+@keyframes tooltipFadeIn {
+  from { opacity: 0; transform: translateY(-50%) translateX(-4px); }
+  to   { opacity: 1; transform: translateY(-50%) translateX(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+:root { color-scheme: dark; }
+[data-theme="light"] { color-scheme: light; }
+
+html, body {
+  height: 100%;
+  overflow: hidden;
+}
+
+body {
+  background: var(--color-bg-page);
+  color: var(--color-text-primary);
+  font-family: var(--font-inter), "Inter Variable", Inter, Arial, Helvetica, sans-serif;
+  font-size: 14px;
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-border-focus) transparent;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* Live run log — monospace, preserves CLI output exactly. */
+.run-log {
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* ── Console overrides ─────────────────────────────────────────────────────
+   WCAG 2.1 AA (4.5:1 for text) in light mode. The base light values for
+   success/warning/danger text, the neutral badge and page-coloured text on
+   the accent button measure 3.1–4.4:1; these keep the same hue families. */
+:root {
+  --color-text-on-accent: var(--color-bg-page);
+}
+[data-theme="light"] {
+  --color-text-on-accent: #0F1117;      /* 5.6:1 on #1A9E72 */
+  --color-success-text: #15803D;        /* 4.8:1 on success-bg */
+  --color-warning-text: #9A3412;        /* 7:1 on warning-bg */
+  --color-danger-text: #B91C1C;         /* 5.9:1 on danger-bg */
+  --color-medium-text: #1D4ED8;         /* 6.2:1 on medium-bg */
+  --color-neutral-text: #5C5E72;        /* 5.8:1 on neutral-bg */
+  --color-neutral-bg: #F4F5F8;
+}
