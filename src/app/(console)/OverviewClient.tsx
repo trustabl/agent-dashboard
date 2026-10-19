@@ -229,7 +229,7 @@ export function OverviewDetail({ r, onRun, onView }: { r: OverviewRow; onRun: (a
           {r.analyzer.otelRules.length ? ` · ${r.analyzer.otelRules.join(', ')}` : ''}
         </Kv>
         <div className="flex flex-wrap gap-2 mt-2.5">
-          <Link href={`/repos/${id}`} className={linkBtn}>Open repo</Link>
+          <Link href={`/repos/${id}`} className="inline-flex items-center h-9 text-sm font-medium text-(--color-text-primary) underline underline-offset-2 hover:text-(--color-accent-default)">Open repo</Link>
           <Button size="sm" variant="ghost" onClick={() => onRun({ tool: 'analyzer', repoId: id })}>Rescan</Button>
           <Button size="sm" variant="ghost" onClick={() => onRun({ tool: 'probe', repoId: id, grantSet: r.probe.grantSetMode ?? (r.probe.analyzerTools ? 'analyzer' : 'draft') })}>Re-probe</Button>
           <Button size="sm" variant="ghost" onClick={() => onRun({ tool: 'forge', repoId: id })}>{r.forge.exists ? 'Regenerate' : 'Generate skill'}</Button>

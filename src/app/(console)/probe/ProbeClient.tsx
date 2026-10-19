@@ -209,7 +209,9 @@ const DRAFT_TONE: Record<DraftState['kind'], Tone> = { drafted: 'success', empty
 export function DraftPill({ draft }: { draft: DraftState }) {
   const label = draft.kind === 'drafted' ? 'unsigned draft' : draft.kind === 'empty' ? 'not drafted' : draft.kind === 'withheld' ? 'withheld' : 'no profile'
   const title = draft.kind === 'drafted' ? `${plural(draft.count, 'outbound entry', 'outbound entries')} · unsigned` : draft.kind === 'none' ? undefined : draft.reason
-  return <Pill tone={DRAFT_TONE[draft.kind]} title={title}>{label}</Pill>
+  // Nothing reached the network: an empty draft is the right answer, not a risk.
+  const tone = draft.kind === 'empty' && draft.noEgress ? 'neutral' : DRAFT_TONE[draft.kind]
+  return <Pill tone={tone} title={title}>{label}</Pill>
 }
 
 const FLAG_TONE: Record<ProbeFlag, Tone> = {

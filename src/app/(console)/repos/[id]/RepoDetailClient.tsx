@@ -2,7 +2,7 @@
 import Link from 'next/link'
 import { Download } from 'lucide-react'
 import { Button, Card } from '@/components/ui'
-import { ErrorBox, Kpi, KpiGrid, Kv, Mono, Note, Pill, Spark, Unavailable } from '@/components/console/primitives'
+import { ErrorBox, Kpi, KpiGrid, Kv, Mono, Note, Pill, Sev, Spark, Unavailable } from '@/components/console/primitives'
 import { useRunDialog } from '@/components/console/RunDialog'
 import { RunHistory } from '@/components/console/RunHistory'
 import { CopyCli } from '@/components/console/CopyCli'
@@ -165,7 +165,7 @@ export function RepoDetailView({ d }: { d: RepoDetail }) {
         <div className="mb-2"><StateCell s={analyzerState(a)} /></div>
         <Kv>{a.lastScan ? `${a.open} open · ${a.counts.critical} critical · ${a.counts.high} high · ${a.counts.medium} medium · ${a.counts.low} low` : 'Not scanned yet.'}</Kv>
         {a.openFindings.slice(0, 5).map((x) => (
-          <Kv key={x.fingerprint}><Pill tone={x.severity === 'critical' || x.severity === 'high' ? 'danger' : x.severity === 'medium' ? 'warning' : 'neutral'}>{x.severity}</Pill> {x.title} <Mono>{x.rule_id}</Mono></Kv>
+          <Kv key={x.fingerprint}><Sev level={x.severity} /> {x.title} <Mono>{x.rule_id}</Mono></Kv>
         ))}
         <div className="flex flex-wrap gap-2 mt-3">
           <Link href={`/analyzer?repo=${d.repo.id}&open=issues`} className={linkBtn}>Open in Analyzer</Link>

@@ -165,7 +165,7 @@ export function evaluateEgress(profile: ProbeProfile | null, draft: DraftDoc | n
 
 export type DraftState =
   | { kind: 'drafted'; count: number }
-  | { kind: 'empty'; reason: string }
+  | { kind: 'empty'; reason: string; noEgress?: boolean }
   | { kind: 'withheld'; reason: string }
   | { kind: 'none' }
 
@@ -190,6 +190,6 @@ export function draftState(draft: DraftDoc | null, flags: FlagHit[], observed: E
     const names = flags.map((f) => f.flag).join(', ')
     return { kind: 'empty', reason: `Draft left empty: every observed destination was flagged (${names}) instead of being allowed. Fix the tool or add the destination to your allow list, then re-run.` }
   }
-  if (observed.length === 0) return { kind: 'empty', reason: 'No network egress observed — the draft allows no outbound destinations.' }
+  if (observed.length === 0) return { kind: 'empty', reason: 'No network egress observed — the draft allows no outbound destinations.', noEgress: true }
   return { kind: 'empty', reason: 'Probe wrote no outbound entries.' }
 }
