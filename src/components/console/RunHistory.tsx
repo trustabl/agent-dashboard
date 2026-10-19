@@ -33,7 +33,8 @@ export function runResult(r: Pick<RunRow, 'status' | 'action' | 'summary' | 'err
     case 'probe': {
       const d = s.draft as { kind?: string; count?: number } | undefined
       const egress = (s.egress as unknown[] | undefined)?.length ?? 0
-      return `${egress} destination${egress === 1 ? '' : 's'} · ${d?.kind === 'drafted' ? `unsigned draft (${d.count})` : d?.kind ?? 'no draft'} · ${s.cache ?? ''}`
+      const draft = d?.kind === 'drafted' ? `unsigned draft (${d.count})` : d?.kind === 'empty' ? 'not drafted' : d?.kind === 'withheld' ? 'draft withheld' : 'no draft'
+      return [`${egress} destination${egress === 1 ? '' : 's'}`, draft, s.cache as string | undefined].filter(Boolean).join(' · ')
     }
   }
   return r.status

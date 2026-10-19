@@ -1,0 +1,1102 @@
+{
+ "repo": {
+  "id": "cf78d754-e488-45eb-b1e8-4a75884f312a",
+  "path": "/work/repos/acme-support",
+  "name": "acme-support",
+  "created_at": 1792386006670
+ },
+ "analyzer": {
+  "repo": {
+   "id": "cf78d754-e488-45eb-b1e8-4a75884f312a",
+   "path": "/work/repos/acme-support",
+   "name": "acme-support",
+   "created_at": 1792386006670
+  },
+  "agent": "fixture",
+  "commitSha": "3db371848afeed7b0321c5ed7368e294754d03fa",
+  "lastScan": {
+   "id": "20261019T050835-936ebf26",
+   "tool": "analyzer",
+   "action": "scan",
+   "status": "succeeded",
+   "started_at": 1792386515569,
+   "finished_at": 1792386516476,
+   "command": "cd /work/repos/acme-support && /home/me/.trustabl-console/bin/trustabl-0.1.14/trustabl scan /work/repos/acme-support --json-out /home/me/.trustabl-console/runs/20261019T050835-936ebf26/scan.json --sarif-out /home/me/.trustabl-console/runs/20261019T050835-936ebf26/trustabl.sarif --no-color",
+   "commit_sha": "3db371848afeed7b0321c5ed7368e294754d03fa",
+   "rules_sha": "ff6ff960fa3d868feb400d6f12bd7413bc6335ee5751edee1b29a76e47533367",
+   "tool_version": "0.1.14",
+   "error": null,
+   "summary": {
+    "open": 14,
+    "severity": {
+     "critical": 0,
+     "high": 3,
+     "medium": 5,
+     "low": 6
+    },
+    "introduced": 2,
+    "resolved": 1,
+    "testPathFindings": 4,
+    "readiness": 70,
+    "otel": "absent",
+    "sdks": [
+     "claude_agent_sdk",
+     "openai_agents"
+    ],
+    "languages": [
+     "python"
+    ],
+    "agent": "fixture",
+    "toolCount": 2,
+    "firstScan": false,
+    "scanId": "scan_a99a344952a7701a",
+    "rulesFromCache": false
+   }
+  },
+  "running": null,
+  "readiness": 70,
+  "counts": {
+   "critical": 0,
+   "high": 3,
+   "medium": 5,
+   "low": 6
+  },
+  "open": 14,
+  "firstOpen": 13,
+  "scans": 2,
+  "trend": [
+   13,
+   14
+  ],
+  "trendLabel": "rising",
+  "openFindings": [
+   {
+    "run_id": "20261019T050835-936ebf26",
+    "repo_id": "cf78d754-e488-45eb-b1e8-4a75884f312a",
+    "fingerprint": "d31412076341a5791acc5bfb7adaadd1e65e9a440a020e624ff845e152c66662",
+    "rule_id": "OAI-106",
+    "category": "openai_sdk",
+    "scope": "agent",
+    "severity": "high",
+    "confidence": 0.9,
+    "title": "Agent wires MCP servers without input_guardrails",
+    "explanation": "The agent imports tools from one or more MCP servers (mcp_servers=) but has no input_guardrails. MCP tool descriptions are advertised by the MCP server, which is a separate trust boundary; an attacker- controlled or compromised MCP server can craft tool descriptions that bait the agent into harmful actions — the \"tool poisoning\" pattern documented in the MCP threat literature. Detection only fires when mcp_servers is actually configured with at least one server (an empty list wires nothing), so agents without MCP are unaffected.\n",
+    "suggested_fix": "Add at least one @input_guardrail that inspects the user's input AND the resolved tool list before the model is invoked. Pin MCP servers to known-trusted URLs/checksums and document the trust assumption.\n",
+    "tool_name": "multi",
+    "file_path": "hosted_and_mcp.py",
+    "start_line": 4,
+    "end_line": 8,
+    "origin": null,
+    "repoName": "acme-support",
+    "status": "open"
+   },
+   {
+    "run_id": "20261019T050835-936ebf26",
+    "repo_id": "cf78d754-e488-45eb-b1e8-4a75884f312a",
+    "fingerprint": "bb7dbde9bbad459a08b810090d8861d193bf0b20dbeb4fa11391c216b933dd9d",
+    "rule_id": "OAI-109",
+    "category": "openai_sdk",
+    "scope": "agent",
+    "severity": "high",
+    "confidence": 0.85,
+    "title": "Agent uses WebSearchTool without input_guardrails",
+    "explanation": "This agent is wired with WebSearchTool, which fetches content from the public internet, but has no input_guardrails configured. Web search results are untrusted external data that can contain prompt injection payloads. An attacker can craft malicious content on a page they control; when the agent searches and retrieves that content, the injected instructions can hijack the agent's behavior — exfiltrating data, calling other tools, or manipulating outputs.\n",
+    "suggested_fix": "Add at least one @input_guardrail that validates user queries before they reach WebSearchTool. The guardrail should reject queries that could lead to attacker-controlled content (e.g. queries containing raw URLs or suspicious redirection patterns). Wire it via input_guardrails=[...] on the Agent(...) constructor.\n",
+    "tool_name": "multi",
+    "file_path": "hosted_and_mcp.py",
+    "start_line": 4,
+    "end_line": 8,
+    "origin": null,
+    "repoName": "acme-support",
+    "status": "open"
+   },
+   {
+    "run_id": "20261019T050835-936ebf26",
+    "repo_id": "cf78d754-e488-45eb-b1e8-4a75884f312a",
+    "fingerprint": "2e6b2014284e0553a9ad18a0b6e1f1527a4c1de5940aff560d49dd3f183f9a3f",
+    "rule_id": "OAI-118",
+    "category": "openai_sdk",
+    "scope": "agent",
+    "severity": "high",
+    "confidence": 0.75,
+    "title": "Agent wires an MCP server with no tool_filter allow-list",
+    "explanation": "This agent wires an MCP server (MCPServerStdio, MCPServerSse, or MCPServerStreamableHttp) with no tool_filter. Unlike an explicit tools=[...] list, an MCP server connects the agent to every tool that server currently exposes — a surface that is not enumerable from the agent's source, can grow or change behavior whenever the server is updated, and sits on the far side of a trust boundary this codebase does not control. tool_filter (via create_static_tool_filter or a callable) is the SDK's only mechanism for narrowing that catalog to a named allow-list; when it is None (the default), no filtering occurs at all, so a poisoned or newly-added tool description reaches the model unfiltered.\n",
+    "suggested_fix": "Pass tool_filter=create_static_tool_filter(allowed_tool_names=[...]) to the MCP server constructor, naming the specific tool names this agent is allowed to call, e.g. MCPServerStdio(params=..., tool_filter= create_static_tool_filter(allowed_tool_names=[\"read_file\", \"list_directory\"])). Re-review the filter whenever the agent's task changes, and treat any server tool not in the list as excluded by default.\n",
+    "tool_name": "multi",
+    "file_path": "hosted_and_mcp.py",
+    "start_line": 4,
+    "end_line": 8,
+    "origin": null,
+    "repoName": "acme-support",
+    "status": "open"
+   },
+   {
+    "run_id": "20261019T050835-936ebf26",
+    "repo_id": "cf78d754-e488-45eb-b1e8-4a75884f312a",
+    "fingerprint": "909f2973bbb976bb4bca098a37428ad29f25c0b2587171b86430a13f1367e5d4",
+    "rule_id": "OAI-201",
+    "category": "openai_sdk",
+    "scope": "repo",
+    "severity": "medium",
+    "confidence": 0.8,
+    "title": "Project uses default OpenAI tracing",
+    "explanation": "The project uses the OpenAI Agents SDK with default tracing enabled. By default, inputs, tool calls, tool outputs, and agent responses are sent to OpenAI's hosted tracing backend. For projects handling sensitive data (PII, credentials, internal documents), this is a data egress channel that is easy to miss.\n",
+    "suggested_fix": "Either disable tracing entirely (set OPENAI_AGENTS_DISABLE_TRACING=1 in the environment) OR register a custom trace processor via agents.tracing.add_trace_processor(...) that redacts sensitive fields before they leave the process.\n",
+    "tool_name": "",
+    "file_path": "",
+    "start_line": 0,
+    "end_line": 0,
+    "origin": null,
+    "repoName": "acme-support",
+    "status": "open"
+   },
+   {
+    "run_id": "20261019T050835-936ebf26",
+    "repo_id": "cf78d754-e488-45eb-b1e8-4a75884f312a",
+    "fingerprint": "f1343919940899105c0361d683a5cb9193e5d05f5f0ebbbf5a78401c5eb23252",
+    "rule_id": "CSKILL-086",
+    "category": "claude_skill",
+    "scope": "skill",
+    "severity": "medium",
+    "confidence": 0.65,
+    "title": "Skill body implies data retention or logging",
+    "explanation": "This skill's body uses language implying persistence — logging, storing, caching, or writing to a database — without stating a retention policy or user-consent basis for keeping that data. Data that is written or logged outlives the current session, so what gets kept, for how long, and who can see it needs to be explicit rather than implied by a verb in the instructions.\n",
+    "suggested_fix": "State what is stored, where it's stored, how long it's retained, and the basis for retaining it (e.g. \"logs the request ID only, for 24 hours, to support debugging\"). If the skill doesn't need to persist anything beyond the current turn, say so explicitly instead of leaving it to be inferred.\n",
+    "tool_name": "trustabl-pre-coding",
+    "file_path": ".claude/skills/trustabl-pre-coding/SKILL.md",
+    "start_line": 1,
+    "end_line": 7,
+    "origin": null,
+    "repoName": "acme-support",
+    "status": "introduced"
+   },
+   {
+    "run_id": "20261019T050835-936ebf26",
+    "repo_id": "cf78d754-e488-45eb-b1e8-4a75884f312a",
+    "fingerprint": "80d8ab9d138d0b8e4750a54659a42d44ad10af5c0b1c9218c6f64d24a3fabe6d",
+    "rule_id": "CSKILL-084",
+    "category": "claude_skill",
+    "scope": "skill",
+    "severity": "medium",
+    "confidence": 0.6,
+    "title": "Skill requests broad, unminimized data access",
+    "explanation": "This skill's body uses broad-access phrasing — \"all data\", \"entire\", \"every record\", \"full export\" — that suggests it pulls more than the task at hand needs. Requesting an entire dataset or a full export when a task needs only a filtered subset widens the blast radius of any bug, leak, or injected instruction that later acts on the retrieved data.\n",
+    "suggested_fix": "Scope the skill's data access to the specific records or fields the task requires and filter at the source rather than fetching everything and filtering afterward. If a full export genuinely is the task, state why in the skill's description so reviewers can evaluate the scope deliberately rather than by default.\n",
+    "tool_name": "trustabl-pre-coding",
+    "file_path": ".claude/skills/trustabl-pre-coding/SKILL.md",
+    "start_line": 1,
+    "end_line": 7,
+    "origin": null,
+    "repoName": "acme-support",
+    "status": "introduced"
+   },
+   {
+    "run_id": "20261019T050835-936ebf26",
+    "repo_id": "cf78d754-e488-45eb-b1e8-4a75884f312a",
+    "fingerprint": "0738c2d3020c0567b1503e2b297396dd514549b9459073a745d06ef5b9ae359e",
+    "rule_id": "OAI-110",
+    "category": "openai_sdk",
+    "scope": "agent",
+    "severity": "medium",
+    "confidence": 0.6,
+    "title": "Agent wires a content-fetching tool without output_guardrails",
+    "explanation": "This agent pulls in untrusted external content (web search, file search, or a code interpreter) but has no output_guardrails. Input guardrails (OAI-101/106/109) screen what reaches the model; output guardrails are the SDK's mechanism to screen the final response before it reaches the user. Without them, a prompt-injected tool result can drive an exfiltrating or unsafe final answer with nothing inspecting the egress. The check is scoped to agents that actually wire a content-fetching hosted tool, since a plain agent legitimately needs no output guardrail.\n",
+    "suggested_fix": "Add at least one output guardrail (a function decorated @output_guardrail or an OutputGuardrail instance) and wire it via output_guardrails=[...] on the Agent(...) constructor. It should inspect the final output for data exfiltration and unsafe content before it is returned.\n",
+    "tool_name": "multi",
+    "file_path": "hosted_and_mcp.py",
+    "start_line": 4,
+    "end_line": 8,
+    "origin": null,
+    "repoName": "acme-support",
+    "status": "open"
+   },
+   {
+    "run_id": "20261019T050835-936ebf26",
+    "repo_id": "cf78d754-e488-45eb-b1e8-4a75884f312a",
+    "fingerprint": "e92d31aa2aa4b9836170185398054f75fc2ef69216ba547262eaf145640b1736",
+    "rule_id": "OAI-018",
+    "category": "openai_sdk",
+    "scope": "tool",
+    "severity": "medium",
+    "confidence": 0.55,
+    "title": "Tool builds outbound URL from non-literal value",
+    "explanation": "An OpenAI Agents SDK tool builds its outbound HTTP URL from a non-literal value — typically a tool parameter interpolated into an f-string or concatenated onto a base URL. Because tool arguments are produced by the model from conversation context (including prior tool output and user input), an attacker who can shape that context can steer the request to an attacker-controlled host or to an internal address the agent's network egress can reach but the model was never meant to touch. The same channel also leaks request bodies (auth headers, JSON payloads, the model's reasoning) to whichever host the URL resolves to, so the failure mode is both SSRF and data exfiltration in one call.\n",
+    "suggested_fix": "Treat the model-supplied value as untrusted input to URL construction. Validate it against an allow-list of permitted hosts/path segments before any HTTP client touches it, or look the value up against a server-side registry and build the URL from the registry's trusted entry. If the value is meant to be an opaque ID (e.g. a connection_id), pass it as a query parameter or path segment of a fixed base URL and reject characters that would let it escape that slot. Credit is given when the body checks the parsed hostname against a named allow-list; also require https:// and cap or disable redirects (follow_redirects=False / allow_redirects=False).\n",
+    "tool_name": "fetch",
+    "file_path": "agent.py",
+    "start_line": 10,
+    "end_line": 12,
+    "origin": null,
+    "repoName": "acme-support",
+    "status": "open"
+   },
+   {
+    "run_id": "20261019T050835-936ebf26",
+    "repo_id": "cf78d754-e488-45eb-b1e8-4a75884f312a",
+    "fingerprint": "8c927f0b1b0fb63358ed8144fb13e050c197ca78e3086aa6eb128d97cc47085a",
+    "rule_id": "CSDK-203",
+    "category": "claude_sdk",
+    "scope": "repo",
+    "severity": "low",
+    "confidence": 0.9,
+    "title": "Repo ships Claude Agent SDK code without an agent-guidance doc (AGENTS.md/CLAUDE.md)",
+    "explanation": "A repository that builds on the Claude Agent SDK but ships no agent-guidance doc — CLAUDE.md (the Claude Code convention) or AGENTS.md (the cross-vendor one) — leaves any coding agent that opens the repo with no project-specific guidance. The conventions, build commands, test runners, lint scripts, and \"do not touch\" boundaries a human maintainer would describe in onboarding are absent, so the agent has to infer them from the source on every session and frequently guesses wrong — bypassing the project's lint, picking the wrong test command, or violating commit conventions that were never written down anywhere it could read. The cost compounds: each new contributor (human or agent) reinvents the same wrong assumptions.\n",
+    "suggested_fix": "Add a CLAUDE.md (or an AGENTS.md) at the repository root documenting how to build, test, and lint the project, the coding conventions the agent must respect, the directories or files it must not modify, and any project-specific safety guardrails (e.g. \"never run migrations\", \"never push to main\"). Treat it as the project's agent-facing README and keep it under version control so reviewers see drift.\n",
+    "tool_name": "",
+    "file_path": "",
+    "start_line": 0,
+    "end_line": 0,
+    "origin": null,
+    "repoName": "acme-support",
+    "status": "open"
+   },
+   {
+    "run_id": "20261019T050835-936ebf26",
+    "repo_id": "cf78d754-e488-45eb-b1e8-4a75884f312a",
+    "fingerprint": "26a8e7422c51ce85da5436d8ee503243e0a68a42e73ccb4ac96ab9be0ea776e1",
+    "rule_id": "OAI-202",
+    "category": "openai_sdk",
+    "scope": "repo",
+    "severity": "low",
+    "confidence": 0.9,
+    "title": "OpenAI Agents project ships no agent-guidance doc (AGENTS.md/CLAUDE.md)",
+    "explanation": "The project uses the OpenAI Agents SDK in code but ships no agent-guidance doc (AGENTS.md or CLAUDE.md) at the repo root. AGENTS.md is the cross-vendor convention an editing coding agent reads before it acts; with neither file present, any agent that opens this repo has no project-specific guidance on Agent vs SandboxAgent choice, handoff topology, required input/output guardrails, tool_choice settings, or the local test and build commands. The likely consequence is generated code that bypasses the project's safety contracts because nothing in-tree teaches the agent the local rules.\n",
+    "suggested_fix": "Add an AGENTS.md at the repo root (the cross-vendor standard; a CLAUDE.md also satisfies this rule). State whether the project uses Agent or SandboxAgent, list required guardrails (input_guardrails, output_guardrails) and tool_choice conventions, note any handoff or tracing policy, and give the exact test, lint, and build commands. Keep it short and concrete so an editing agent can act on it without re-deriving the conventions.\n",
+    "tool_name": "",
+    "file_path": "",
+    "start_line": 0,
+    "end_line": 0,
+    "origin": null,
+    "repoName": "acme-support",
+    "status": "open"
+   },
+   {
+    "run_id": "20261019T050835-936ebf26",
+    "repo_id": "cf78d754-e488-45eb-b1e8-4a75884f312a",
+    "fingerprint": "f4134305b25f060325107a2b2b84bc5db9daa2180c253444c1eb77fd133ebbca",
+    "rule_id": "OAI-026",
+    "category": "openai_sdk",
+    "scope": "tool",
+    "severity": "low",
+    "confidence": 0.8,
+    "title": "Tool description is too short to guide model selection",
+    "explanation": "A description under 40 characters is rarely enough to convey what a tool does, what it returns, and when to call it rather than a similarly named neighbor. The Agents SDK passes this text to the model as its only selection signal, so a stub like \"Gets data.\" leaves scope and preconditions to guesswork. The cost lands where it is hardest to see: an agent with handoffs picks between its own tools and its peers' on the strength of these strings, so a thin description does not just cause a wrong call, it can route the whole conversation to the wrong agent.\n",
+    "suggested_fix": "Expand the description to at least a full sentence covering inputs, outputs, and the situation in which this tool should be used over the alternatives. Where two tools are easy to confuse, say in each which one the other case belongs to.\n",
+    "tool_name": "fetch",
+    "file_path": "agent.py",
+    "start_line": 10,
+    "end_line": 12,
+    "origin": null,
+    "repoName": "acme-support",
+    "status": "open"
+   },
+   {
+    "run_id": "20261019T050835-936ebf26",
+    "repo_id": "cf78d754-e488-45eb-b1e8-4a75884f312a",
+    "fingerprint": "7bd09d3d269c8f7304f5ab5326012e36b11269cc086de68fc05f0d3fe01c96c4",
+    "rule_id": "CSDK-208",
+    "category": "claude_sdk",
+    "scope": "repo",
+    "severity": "low",
+    "confidence": 0.75,
+    "title": "Claude Agent SDK project wires no observability",
+    "explanation": "This project runs Claude Agent SDK agents but wires no observability backend. No OpenTelemetry provider and no third-party instrumentation (Langfuse, Logfire, Braintrust, Phoenix, Weave, AgentOps) appears in the parsed source. A subagent that picks the wrong tool, a permission mode that is broader than intended, or a run that silently exhausts its turns leaves no trace to inspect afterwards.\n",
+    "suggested_fix": "Install an OpenTelemetry tracer provider at process start (opentelemetry.trace.set_tracer_provider(...)) with an OTLP exporter pointed at your collector, or initialize a vendor SDK — logfire.configure(), Langfuse's CallbackHandler, or braintrust.init_logger() — before the first query() call.\n",
+    "tool_name": "",
+    "file_path": "",
+    "start_line": 0,
+    "end_line": 0,
+    "origin": null,
+    "repoName": "acme-support",
+    "status": "open"
+   },
+   {
+    "run_id": "20261019T050835-936ebf26",
+    "repo_id": "cf78d754-e488-45eb-b1e8-4a75884f312a",
+    "fingerprint": "82c259a97c44534dcd2d803eb4dd13866c202b9dc4d63d6838b5fb0aa35c7674",
+    "rule_id": "OAI-203",
+    "category": "openai_sdk",
+    "scope": "repo",
+    "severity": "low",
+    "confidence": 0.75,
+    "title": "OpenAI Agents SDK project wires no observability",
+    "explanation": "This project runs OpenAI Agents SDK agents but wires no observability backend: no OpenTelemetry provider, no Langfuse, Logfire, Phoenix, Braintrust, Weave, or AgentOps instrumentation appears anywhere in the parsed source. When an agent misbehaves in production — a tool loop, a silent guardrail trip, a cost spike — there is no trace to read, so the only evidence is whatever the application happened to log. Agent runs are non-deterministic, which makes after-the-fact reconstruction from logs alone unreliable.\n",
+    "suggested_fix": "Wire a trace backend. The SDK traces natively: register a processor with agents.tracing.add_trace_processor(...) to ship spans to your collector, or install an OpenTelemetry provider (opentelemetry.trace.set_tracer_provider(...)) with an OTLP exporter. If you already run a vendor — Langfuse, Logfire, Braintrust, Phoenix — initialize its SDK at process start.\n",
+    "tool_name": "",
+    "file_path": "",
+    "start_line": 0,
+    "end_line": 0,
+    "origin": null,
+    "repoName": "acme-support",
+    "status": "open"
+   },
+   {
+    "run_id": "20261019T050835-936ebf26",
+    "repo_id": "cf78d754-e488-45eb-b1e8-4a75884f312a",
+    "fingerprint": "b22ed5d5a8a34cb96310479366269a8402fdf2ace2a8c2e39bfe5d609beb37c5",
+    "rule_id": "OAI-004",
+    "category": "openai_sdk",
+    "scope": "tool",
+    "severity": "low",
+    "confidence": 0.7,
+    "title": "Tool has no failure_error_function",
+    "explanation": "When a tool raises an exception, the OpenAI Agents SDK surfaces the exception's string representation to the model by default. The model receives an opaque error with no recovery contract, leading to hallucinated retries or confused responses. Setting failure_error_function lets you control what the model sees, typically a structured JSON describing the failure and what input to try instead.\n",
+    "suggested_fix": "Pass failure_error_function= to the decorator. The function should receive the exception and the run context, and return a structured string the model can reason about.\n",
+    "tool_name": "fetch",
+    "file_path": "agent.py",
+    "start_line": 10,
+    "end_line": 12,
+    "origin": null,
+    "repoName": "acme-support",
+    "status": "open"
+   }
+  ],
+  "resolvedLast": [
+   {
+    "run_id": "20261019T050006-4d0f950b",
+    "repo_id": "cf78d754-e488-45eb-b1e8-4a75884f312a",
+    "fingerprint": "ab03bac7fc7de22e01d58cdea192cc4bafb8f8f8e3fa36ab7e33969c2c16b4fc",
+    "rule_id": "OAI-005",
+    "category": "openai_sdk",
+    "scope": "tool",
+    "severity": "high",
+    "confidence": 0.85,
+    "title": "Network call has no timeout",
+    "explanation": "An OpenAI Agents SDK tool that makes a network request without a timeout can hang indefinitely, blocking the agent's run loop and consuming the conversation's wall-clock budget. The SDK does not enforce timeouts on tool code.\n",
+    "suggested_fix": "Pass timeout= (typically 5-30 seconds depending on the endpoint). Surface timeouts as a structured tool error the model can react to, using failure_error_function (see OAI-004).\n",
+    "tool_name": "fetch",
+    "file_path": "agent.py",
+    "start_line": 10,
+    "end_line": 12,
+    "origin": null,
+    "repoName": "acme-support",
+    "status": "resolved",
+    "goneAt": 1792386515569
+   }
+  ],
+  "history": [
+   {
+    "runId": "20261019T050006-4d0f950b",
+    "at": 1792386006691,
+    "open": 13,
+    "readiness": 64,
+    "introduced": [],
+    "resolved": [],
+    "imported": false
+   },
+   {
+    "runId": "20261019T050835-936ebf26",
+    "at": 1792386515569,
+    "open": 14,
+    "readiness": 70,
+    "introduced": [
+     {
+      "rule_id": "CSKILL-084",
+      "title": "Skill requests broad, unminimized data access"
+     },
+     {
+      "rule_id": "CSKILL-086",
+      "title": "Skill body implies data retention or logging"
+     }
+    ],
+    "resolved": [
+     {
+      "rule_id": "OAI-005",
+      "title": "Network call has no timeout"
+     }
+    ],
+    "imported": false
+   }
+  ],
+  "otel": "absent",
+  "otelRules": [],
+  "testPathHidden": 4,
+  "sdks": [
+   "claude_agent_sdk",
+   "openai_agents"
+  ],
+  "languages": [
+   "python"
+  ],
+  "lastError": null
+ },
+ "forge": {
+  "repo": {
+   "id": "cf78d754-e488-45eb-b1e8-4a75884f312a",
+   "path": "/work/repos/acme-support",
+   "name": "acme-support",
+   "created_at": 1792386006670
+  },
+  "agent": "fixture",
+  "skillPath": "/work/repos/acme-support/.claude/skills/trustabl-pre-coding/SKILL.md",
+  "exists": true,
+  "stamp": {
+   "raw": "<!-- generated: 2026-10-19 | rules: 9b012e4a292e117dfa3496b95ed1d1f7104277d2 | schema: 23 | sdks: openai_sdk | template: 3 -->",
+   "generated": "2026-10-19",
+   "rules": "9b012e4a292e117dfa3496b95ed1d1f7104277d2",
+   "schema": "23",
+   "sdks": [
+    "openai_sdk"
+   ],
+   "template": "3"
+  },
+  "outline": {
+   "hasApplyLoop": true,
+   "tracingLanguages": [
+    "Python"
+   ],
+   "otel": "encoded",
+   "sections": [
+    {
+     "title": "OpenAI Agents SDK agent wiring safety",
+     "scopes": [
+      {
+       "scope": "Tool",
+       "rules": [
+        "OAI-005",
+        "OAI-006",
+        "OAI-011",
+        "OAI-012",
+        "OAI-013",
+        "OAI-014",
+        "OAI-015",
+        "OAI-030",
+        "OAI-002",
+        "OAI-003",
+        "OAI-009",
+        "OAI-018",
+        "OAI-032",
+        "OAI-001",
+        "OAI-004",
+        "OAI-007",
+        "OAI-008",
+        "OAI-010",
+        "OAI-025",
+        "OAI-026"
+       ]
+      },
+      {
+       "scope": "Agent",
+       "rules": [
+        "OAI-101",
+        "OAI-102",
+        "OAI-103",
+        "OAI-106",
+        "OAI-109",
+        "OAI-111",
+        "OAI-115",
+        "OAI-118",
+        "OAI-104",
+        "OAI-110",
+        "OAI-112",
+        "OAI-120"
+       ]
+      },
+      {
+       "scope": "Repo",
+       "rules": [
+        "OAI-201",
+        "OAI-202",
+        "OAI-203"
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  "otel": "encoded",
+  "check": {
+   "status": "pass",
+   "detail": "up to date (rules: 9b012e4, generated: 2026-10-19)",
+   "currentRules": "9b012e4",
+   "stampRules": "9b012e4"
+  },
+  "checkRun": {
+   "id": "20261019T050819-4e95bab3",
+   "tool": "forge",
+   "action": "check",
+   "status": "succeeded",
+   "started_at": 1792386499861,
+   "finished_at": 1792386500018,
+   "command": "cd /work/repos/acme-support && /home/me/.trustabl-console/bin/trustabl-0.1.14/trustabl forge check /work/repos/acme-support/.claude/skills/trustabl-pre-coding/SKILL.md",
+   "commit_sha": "89d574c737c9aa48d370eb1b1c6e483fdce56039",
+   "rules_sha": "9b012e4",
+   "tool_version": "0.1.14",
+   "error": null,
+   "summary": {
+    "check": {
+     "status": "pass",
+     "detail": "up to date (rules: 9b012e4, generated: 2026-10-19)",
+     "currentRules": "9b012e4",
+     "stampRules": "9b012e4"
+    }
+   }
+  },
+  "staleReason": null,
+  "pending": null,
+  "running": null,
+  "lastGenerate": {
+   "id": "20261019T050819-b617cd72",
+   "tool": "forge",
+   "action": "generate",
+   "status": "succeeded",
+   "started_at": 1792386499546,
+   "finished_at": 1792386499818,
+   "command": "cd /work/repos/acme-support && /home/me/.trustabl-console/bin/trustabl-0.1.14/trustabl forge /work/repos/acme-support -o /home/me/.trustabl-console/runs/20261019T050819-b617cd72/SKILL.md",
+   "commit_sha": "89d574c737c9aa48d370eb1b1c6e483fdce56039",
+   "rules_sha": "9b012e4a292e117dfa3496b95ed1d1f7104277d2",
+   "tool_version": "0.1.14",
+   "error": null,
+   "summary": {
+    "stamp": {
+     "raw": "<!-- generated: 2026-10-19 | rules: 9b012e4a292e117dfa3496b95ed1d1f7104277d2 | schema: 23 | sdks: openai_sdk | template: 3 -->",
+     "generated": "2026-10-19",
+     "rules": "9b012e4a292e117dfa3496b95ed1d1f7104277d2",
+     "schema": "23",
+     "sdks": [
+      "openai_sdk"
+     ],
+     "template": "3"
+    },
+    "otel": "encoded",
+    "pending": false,
+    "identical": false,
+    "hadExisting": false,
+    "target": "/work/repos/acme-support/.claude/skills/trustabl-pre-coding/SKILL.md",
+    "appliedAt": 1792386499853
+   }
+  },
+  "lastError": null,
+  "analyzerSdks": [
+   "claude_agent_sdk",
+   "openai_agents"
+  ],
+  "skillMtime": 1792386499853.696,
+  "commands": {
+   "generate": "cd /work/repos/acme-support && /home/me/.trustabl-console/bin/trustabl-0.1.14/trustabl forge /work/repos/acme-support -o /work/repos/acme-support/.claude/skills/trustabl-pre-coding/SKILL.md",
+   "check": "cd /work/repos/acme-support && /home/me/.trustabl-console/bin/trustabl-0.1.14/trustabl forge check /work/repos/acme-support/.claude/skills/trustabl-pre-coding/SKILL.md"
+  }
+ },
+ "probe": {
+  "repo": {
+   "id": "cf78d754-e488-45eb-b1e8-4a75884f312a",
+   "path": "/work/repos/acme-support",
+   "name": "acme-support",
+   "created_at": 1792386006670
+  },
+  "lastRun": {
+   "id": "20261019T050015-a33fe152",
+   "tool": "probe",
+   "action": "probe",
+   "status": "succeeded",
+   "started_at": 1792386015232,
+   "finished_at": 1792386016049,
+   "command": "cd /work/repos/acme-support && printf '%s\\n' q | /home/me/.trustabl-console/bin/autofix-0.2.2/autofix fix --class /home/me/.trustabl-console/runs/20261019T050015-a33fe152/class.yaml --sandbox --runner docker --output-dir /home/me/.trustabl-console/runs/20261019T050015-a33fe152/out --no-sign --model qwen2.5-coder:32b --llm-url http://127.0.0.1:9/v1 --deny-list /home/me/.trustabl-console/runs/20261019T050015-a33fe152/deny-list.txt",
+   "commit_sha": "89d574c737c9aa48d370eb1b1c6e483fdce56039",
+   "rules_sha": null,
+   "tool_version": "0.2.2",
+   "error": null,
+   "summary": {
+    "className": "acme-support",
+    "grantSet": [
+     "/work/repos/acme-support/agent.py",
+     "/work/repos/acme-support/tests/test_fetch.py"
+    ],
+    "grantSetHash": "f85316b29509457806f499dcbaa3d8c717d6064d88f595a99cbd14f5aba8ca04",
+    "egress": [],
+    "flags": [],
+    "draft": {
+     "kind": "empty",
+     "reason": "No network egress observed — the draft allows no outbound destinations."
+    },
+    "cache": "fresh",
+    "runner": "docker",
+    "extras": 5,
+    "skippedWriteTools": []
+   }
+  },
+  "running": null,
+  "lastError": null,
+  "className": "acme-support",
+  "grantSetHash": "f85316b29509457806f499dcbaa3d8c717d6064d88f595a99cbd14f5aba8ca04",
+  "grantSet": [
+   {
+    "path": "/work/repos/acme-support/agent.py",
+    "label": "fetch (agent.py)"
+   },
+   {
+    "path": "/work/repos/acme-support/tests/test_fetch.py",
+    "label": "fetch_fixture (tests/test_fetch.py)"
+   }
+  ],
+  "egress": [],
+  "perTool": [
+   {
+    "path": "/work/repos/acme-support/agent.py",
+    "label": "fetch (agent.py)",
+    "cacheHit": false,
+    "harnessId": "autofix-1792386015776",
+    "egress": [],
+    "findings": 3,
+    "skipped": false
+   },
+   {
+    "path": "/work/repos/acme-support/tests/test_fetch.py",
+    "label": "fetch_fixture (tests/test_fetch.py)",
+    "cacheHit": false,
+    "harnessId": "autofix-1792386015739",
+    "egress": [],
+    "findings": 2,
+    "skipped": false
+   }
+  ],
+  "draft": {
+   "kind": "empty",
+   "reason": "No network egress observed — the draft allows no outbound destinations."
+  },
+  "draftYaml": "version: 1\nfilesystem_policy:\n    read_only: [/usr, /lib, /etc]\n    read_write: [/sandbox, /tmp]\nlandlock:\n    compatibility: best_effort\nprocess:\n    run_as_user: sandbox\n    run_as_group: sandbox\nnetwork_policies:\n    outbound: []\n",
+  "flags": [],
+  "extras": [
+   {
+    "file": "/work/repos/acme-support/agent.py",
+    "title": "No error handling — tool crashes agent",
+    "description": "The tool raises unhandled exceptions that would terminate the entire agent run without recovery.",
+    "severity": "critical",
+    "score_impact": -25,
+    "evidence": [
+     {
+      "label": "Agent crash",
+      "detail": "Tool raised an unhandled exception that would crash the agent run.",
+      "raw_line": "Traceback (most recent call last):",
+      "source": "tool_output"
+     }
+    ],
+    "fix_hint": "Wrap the body of the function that makes external calls in a try/except block. Catch Exception as e and return a safe error string instead of raising. Example: def my_tool(arg):\n    try:\n        # existing body here\n        return result\n    except Exception as e:\n        return f'Tool error: {e}'\nDo NOT change the function signature, imports, or any other part of the file."
+   },
+   {
+    "file": "/work/repos/acme-support/agent.py",
+    "title": "No timeout handling — tool can hang agent indefinitely",
+    "description": "The tool has no timeout on network or IO operations. A slow or degraded dependency will stall the agent with no retry or fallback.",
+    "severity": "critical",
+    "score_impact": -20,
+    "evidence": [
+     {
+      "label": "No timeout",
+      "detail": "requests.get() called without timeout= on line 12",
+      "raw_line": "return requests.get(url).json()   # OAI-005 fires (no timeout)",
+      "source": "static_analysis"
+     }
+    ]
+   },
+   {
+    "file": "/work/repos/acme-support/agent.py",
+    "title": "Unauthorized network calls — tool may exfiltrate data",
+    "description": "The tool makes outbound network connections that are not declared in its metadata. The network call is intentional and must remain — it just needs to be documented so the agent runtime can enforce least-privilege policy.",
+    "severity": "critical",
+    "score_impact": -25,
+    "evidence": [
+     {
+      "label": "Undeclared outbound call",
+      "detail": "Outbound network call on line 12 is not declared in tool metadata",
+      "raw_line": "return requests.get(url).json()   # OAI-005 fires (no timeout)",
+      "source": "static_analysis"
+     }
+    ],
+    "fix_hint": "Add a comment directly above the function signature that declares the outbound endpoint using this exact format: '# Outbound: api.example.com:443 — fetches alert data'. Use '#' for Python, '//' for Go/JS/TS. The network call itself MUST remain completely unchanged. Do not remove, stub, disable, or comment out any network code."
+   },
+   {
+    "file": "/work/repos/acme-support/tests/test_fetch.py",
+    "title": "No timeout handling — tool can hang agent indefinitely",
+    "description": "The tool has no timeout on network or IO operations. A slow or degraded dependency will stall the agent with no retry or fallback.",
+    "severity": "critical",
+    "score_impact": -20,
+    "evidence": [
+     {
+      "label": "No timeout",
+      "detail": "requests.get() called without timeout= on line 9",
+      "raw_line": "return requests.get(url).json()",
+      "source": "static_analysis"
+     }
+    ]
+   },
+   {
+    "file": "/work/repos/acme-support/tests/test_fetch.py",
+    "title": "Unauthorized network calls — tool may exfiltrate data",
+    "description": "The tool makes outbound network connections that are not declared in its metadata. The network call is intentional and must remain — it just needs to be documented so the agent runtime can enforce least-privilege policy.",
+    "severity": "critical",
+    "score_impact": -25,
+    "evidence": [
+     {
+      "label": "Undeclared outbound call",
+      "detail": "Outbound network call on line 9 is not declared in tool metadata",
+      "raw_line": "return requests.get(url).json()",
+      "source": "static_analysis"
+     }
+    ],
+    "fix_hint": "Add a comment directly above the function signature that declares the outbound endpoint using this exact format: '# Outbound: api.example.com:443 — fetches alert data'. Use '#' for Python, '//' for Go/JS/TS. The network call itself MUST remain completely unchanged. Do not remove, stub, disable, or comment out any network code."
+   }
+  ],
+  "cache": "fresh",
+  "runner": "docker",
+  "grantSetMode": "analyzer",
+  "inputs": {
+   "allowList": false,
+   "platformAllowList": false,
+   "denyList": false,
+   "envFixtures": false,
+   "allowWriteTools": false,
+   "noCache": false
+  },
+  "lists": {
+   "allow": [],
+   "platform": [],
+   "deny": []
+  },
+  "evaluation": [],
+  "observedFlagged": [],
+  "skippedWriteTools": [],
+  "analyzerTools": 2,
+  "analyzerGrantSet": [
+   {
+    "label": "agent.py",
+    "tools": [
+     "fetch"
+    ]
+   },
+   {
+    "label": "tests/test_fetch.py",
+    "tools": [
+     "fetch_fixture"
+    ]
+   }
+  ],
+  "hasScan": true,
+  "untested": false,
+  "artifacts": [
+   "probe.profile.json",
+   "probe.findings.json",
+   "network_policies.draft.yaml",
+   "autofix-attestation.json"
+  ],
+  "nextCommand": "cd /work/repos/acme-support && D=\"$(mktemp -d)\" && mkdir \"$D/out\" && printf '%s\\n' 'class: acme-support' tools: '  - path: /work/repos/acme-support' '    entrypoint: agent.py' '  - path: /work/repos/acme-support/tests' '    entrypoint: test_fetch.py' > \"$D/class.yaml\" && printf '%s\\n' 0.0.0.0 :: > \"$D/deny-list.txt\" && printf 'q\\n' | /home/me/.trustabl-console/bin/autofix-0.2.2/autofix fix --class \"$D/class.yaml\" --sandbox --runner docker --output-dir \"$D/out\" --no-sign --model qwen2.5-coder:32b --llm-url http://127.0.0.1:9/v1 --deny-list \"$D/deny-list.txt\""
+ },
+ "className": "acme-support",
+ "tags": {
+  "open": true,
+  "stale": false,
+  "otel": true
+ },
+ "inventory": {
+  "agents": 3,
+  "tools": 2,
+  "mcp": 1,
+  "subagents": 1,
+  "skills": 1
+ },
+ "latestRuns": {
+  "forge": {
+   "id": "20261019T050819-4e95bab3",
+   "tool": "forge",
+   "action": "check",
+   "status": "succeeded",
+   "started_at": 1792386499861,
+   "finished_at": 1792386500018,
+   "command": "cd /work/repos/acme-support && /home/me/.trustabl-console/bin/trustabl-0.1.14/trustabl forge check /work/repos/acme-support/.claude/skills/trustabl-pre-coding/SKILL.md",
+   "commit_sha": "89d574c737c9aa48d370eb1b1c6e483fdce56039",
+   "rules_sha": "9b012e4",
+   "tool_version": "0.1.14",
+   "error": null,
+   "summary": {
+    "check": {
+     "status": "pass",
+     "detail": "up to date (rules: 9b012e4, generated: 2026-10-19)",
+     "currentRules": "9b012e4",
+     "stampRules": "9b012e4"
+    }
+   }
+  },
+  "analyzer": {
+   "id": "20261019T050835-936ebf26",
+   "tool": "analyzer",
+   "action": "scan",
+   "status": "succeeded",
+   "started_at": 1792386515569,
+   "finished_at": 1792386516476,
+   "command": "cd /work/repos/acme-support && /home/me/.trustabl-console/bin/trustabl-0.1.14/trustabl scan /work/repos/acme-support --json-out /home/me/.trustabl-console/runs/20261019T050835-936ebf26/scan.json --sarif-out /home/me/.trustabl-console/runs/20261019T050835-936ebf26/trustabl.sarif --no-color",
+   "commit_sha": "3db371848afeed7b0321c5ed7368e294754d03fa",
+   "rules_sha": "ff6ff960fa3d868feb400d6f12bd7413bc6335ee5751edee1b29a76e47533367",
+   "tool_version": "0.1.14",
+   "error": null,
+   "summary": {
+    "open": 14,
+    "severity": {
+     "critical": 0,
+     "high": 3,
+     "medium": 5,
+     "low": 6
+    },
+    "introduced": 2,
+    "resolved": 1,
+    "testPathFindings": 4,
+    "readiness": 70,
+    "otel": "absent",
+    "sdks": [
+     "claude_agent_sdk",
+     "openai_agents"
+    ],
+    "languages": [
+     "python"
+    ],
+    "agent": "fixture",
+    "toolCount": 2,
+    "firstScan": false,
+    "scanId": "scan_a99a344952a7701a",
+    "rulesFromCache": false
+   }
+  },
+  "probe": {
+   "id": "20261019T050015-a33fe152",
+   "tool": "probe",
+   "action": "probe",
+   "status": "succeeded",
+   "started_at": 1792386015232,
+   "finished_at": 1792386016049,
+   "command": "cd /work/repos/acme-support && printf '%s\\n' q | /home/me/.trustabl-console/bin/autofix-0.2.2/autofix fix --class /home/me/.trustabl-console/runs/20261019T050015-a33fe152/class.yaml --sandbox --runner docker --output-dir /home/me/.trustabl-console/runs/20261019T050015-a33fe152/out --no-sign --model qwen2.5-coder:32b --llm-url http://127.0.0.1:9/v1 --deny-list /home/me/.trustabl-console/runs/20261019T050015-a33fe152/deny-list.txt",
+   "commit_sha": "89d574c737c9aa48d370eb1b1c6e483fdce56039",
+   "rules_sha": null,
+   "tool_version": "0.2.2",
+   "error": null,
+   "summary": {
+    "className": "acme-support",
+    "grantSet": [
+     "/work/repos/acme-support/agent.py",
+     "/work/repos/acme-support/tests/test_fetch.py"
+    ],
+    "grantSetHash": "f85316b29509457806f499dcbaa3d8c717d6064d88f595a99cbd14f5aba8ca04",
+    "egress": [],
+    "flags": [],
+    "draft": {
+     "kind": "empty",
+     "reason": "No network egress observed — the draft allows no outbound destinations."
+    },
+    "cache": "fresh",
+    "runner": "docker",
+    "extras": 5,
+    "skippedWriteTools": []
+   }
+  }
+ },
+ "artifacts": [
+  {
+   "runId": "20261019T050835-936ebf26",
+   "kind": "scan.json"
+  },
+  {
+   "runId": "20261019T050835-936ebf26",
+   "kind": "trustabl.sarif"
+  },
+  {
+   "runId": "20261019T050015-a33fe152",
+   "kind": "probe.profile.json"
+  },
+  {
+   "runId": "20261019T050015-a33fe152",
+   "kind": "probe.findings.json"
+  },
+  {
+   "runId": "20261019T050015-a33fe152",
+   "kind": "network_policies.draft.yaml"
+  }
+ ],
+ "next": {
+  "text": "3 critical/high finding(s) open. Fix them, then rescan.",
+  "action": "analyzer"
+ },
+ "otelSignals": [],
+ "projected": {
+  "fixMedium": 95,
+  "fixHigh": 87,
+  "fixAll": 100
+ },
+ "runs": [
+  {
+   "id": "20261019T050835-936ebf26",
+   "tool": "analyzer",
+   "action": "scan",
+   "status": "succeeded",
+   "started_at": 1792386515569,
+   "finished_at": 1792386516476,
+   "command": "cd /work/repos/acme-support && /home/me/.trustabl-console/bin/trustabl-0.1.14/trustabl scan /work/repos/acme-support --json-out /home/me/.trustabl-console/runs/20261019T050835-936ebf26/scan.json --sarif-out /home/me/.trustabl-console/runs/20261019T050835-936ebf26/trustabl.sarif --no-color",
+   "commit_sha": "3db371848afeed7b0321c5ed7368e294754d03fa",
+   "rules_sha": "ff6ff960fa3d868feb400d6f12bd7413bc6335ee5751edee1b29a76e47533367",
+   "tool_version": "0.1.14",
+   "error": null,
+   "summary": {
+    "open": 14,
+    "severity": {
+     "critical": 0,
+     "high": 3,
+     "medium": 5,
+     "low": 6
+    },
+    "introduced": 2,
+    "resolved": 1,
+    "testPathFindings": 4,
+    "readiness": 70,
+    "otel": "absent",
+    "sdks": [
+     "claude_agent_sdk",
+     "openai_agents"
+    ],
+    "languages": [
+     "python"
+    ],
+    "agent": "fixture",
+    "toolCount": 2,
+    "firstScan": false,
+    "scanId": "scan_a99a344952a7701a",
+    "rulesFromCache": false
+   },
+   "artifacts": [
+    "scan.json",
+    "trustabl.sarif"
+   ]
+  },
+  {
+   "id": "20261019T050819-4e95bab3",
+   "tool": "forge",
+   "action": "check",
+   "status": "succeeded",
+   "started_at": 1792386499861,
+   "finished_at": 1792386500018,
+   "command": "cd /work/repos/acme-support && /home/me/.trustabl-console/bin/trustabl-0.1.14/trustabl forge check /work/repos/acme-support/.claude/skills/trustabl-pre-coding/SKILL.md",
+   "commit_sha": "89d574c737c9aa48d370eb1b1c6e483fdce56039",
+   "rules_sha": "9b012e4",
+   "tool_version": "0.1.14",
+   "error": null,
+   "summary": {
+    "check": {
+     "status": "pass",
+     "detail": "up to date (rules: 9b012e4, generated: 2026-10-19)",
+     "currentRules": "9b012e4",
+     "stampRules": "9b012e4"
+    }
+   },
+   "artifacts": []
+  },
+  {
+   "id": "20261019T050819-b617cd72",
+   "tool": "forge",
+   "action": "generate",
+   "status": "succeeded",
+   "started_at": 1792386499546,
+   "finished_at": 1792386499818,
+   "command": "cd /work/repos/acme-support && /home/me/.trustabl-console/bin/trustabl-0.1.14/trustabl forge /work/repos/acme-support -o /home/me/.trustabl-console/runs/20261019T050819-b617cd72/SKILL.md",
+   "commit_sha": "89d574c737c9aa48d370eb1b1c6e483fdce56039",
+   "rules_sha": "9b012e4a292e117dfa3496b95ed1d1f7104277d2",
+   "tool_version": "0.1.14",
+   "error": null,
+   "summary": {
+    "stamp": {
+     "raw": "<!-- generated: 2026-10-19 | rules: 9b012e4a292e117dfa3496b95ed1d1f7104277d2 | schema: 23 | sdks: openai_sdk | template: 3 -->",
+     "generated": "2026-10-19",
+     "rules": "9b012e4a292e117dfa3496b95ed1d1f7104277d2",
+     "schema": "23",
+     "sdks": [
+      "openai_sdk"
+     ],
+     "template": "3"
+    },
+    "otel": "encoded",
+    "pending": false,
+    "identical": false,
+    "hadExisting": false,
+    "target": "/work/repos/acme-support/.claude/skills/trustabl-pre-coding/SKILL.md",
+    "appliedAt": 1792386499853
+   },
+   "artifacts": [
+    "SKILL.md"
+   ]
+  },
+  {
+   "id": "20261019T050015-a33fe152",
+   "tool": "probe",
+   "action": "probe",
+   "status": "succeeded",
+   "started_at": 1792386015232,
+   "finished_at": 1792386016049,
+   "command": "cd /work/repos/acme-support && printf '%s\\n' q | /home/me/.trustabl-console/bin/autofix-0.2.2/autofix fix --class /home/me/.trustabl-console/runs/20261019T050015-a33fe152/class.yaml --sandbox --runner docker --output-dir /home/me/.trustabl-console/runs/20261019T050015-a33fe152/out --no-sign --model qwen2.5-coder:32b --llm-url http://127.0.0.1:9/v1 --deny-list /home/me/.trustabl-console/runs/20261019T050015-a33fe152/deny-list.txt",
+   "commit_sha": "89d574c737c9aa48d370eb1b1c6e483fdce56039",
+   "rules_sha": null,
+   "tool_version": "0.2.2",
+   "error": null,
+   "summary": {
+    "className": "acme-support",
+    "grantSet": [
+     "/work/repos/acme-support/agent.py",
+     "/work/repos/acme-support/tests/test_fetch.py"
+    ],
+    "grantSetHash": "f85316b29509457806f499dcbaa3d8c717d6064d88f595a99cbd14f5aba8ca04",
+    "egress": [],
+    "flags": [],
+    "draft": {
+     "kind": "empty",
+     "reason": "No network egress observed — the draft allows no outbound destinations."
+    },
+    "cache": "fresh",
+    "runner": "docker",
+    "extras": 5,
+    "skippedWriteTools": []
+   },
+   "artifacts": [
+    "probe.profile.json",
+    "probe.findings.json",
+    "network_policies.draft.yaml",
+    "autofix-attestation.json"
+   ]
+  },
+  {
+   "id": "20261019T050006-4d0f950b",
+   "tool": "analyzer",
+   "action": "scan",
+   "status": "succeeded",
+   "started_at": 1792386006691,
+   "finished_at": 1792386007353,
+   "command": "cd /work/repos/acme-support && /home/me/.trustabl-console/bin/trustabl-0.1.14/trustabl scan /work/repos/acme-support --json-out /home/me/.trustabl-console/runs/20261019T050006-4d0f950b/scan.json --sarif-out /home/me/.trustabl-console/runs/20261019T050006-4d0f950b/trustabl.sarif --no-color",
+   "commit_sha": "89d574c737c9aa48d370eb1b1c6e483fdce56039",
+   "rules_sha": "ff6ff960fa3d868feb400d6f12bd7413bc6335ee5751edee1b29a76e47533367",
+   "tool_version": "0.1.14",
+   "error": null,
+   "summary": {
+    "open": 13,
+    "severity": {
+     "critical": 0,
+     "high": 4,
+     "medium": 3,
+     "low": 6
+    },
+    "introduced": 0,
+    "resolved": 0,
+    "testPathFindings": 4,
+    "readiness": 64,
+    "otel": "absent",
+    "sdks": [
+     "claude_agent_sdk",
+     "openai_agents"
+    ],
+    "languages": [
+     "python"
+    ],
+    "agent": "fixture",
+    "toolCount": 2,
+    "firstScan": true,
+    "scanId": "scan_5647ba6d0430aaa5",
+    "rulesFromCache": false
+   },
+   "artifacts": [
+    "scan.json",
+    "trustabl.sarif"
+   ]
+  }
+ ]
+}

@@ -176,3 +176,24 @@ export function SkeletonRows({ cols, rows = 3 }: { cols: number; rows?: number }
     </>
   )
 }
+
+/** The design's filter dropdown ("All repos (4)") as a native select, so it
+ *  works from the keyboard and with screen readers without extra code. */
+export function FilterSelect({ value, onChange, options, label }: { value: string; onChange: (v: string) => void; options: { value: string; label: string }[]; label: string }) {
+  return (
+    <select
+      aria-label={label}
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      className="h-[42px] rounded-(--radius-sharp) border border-(--color-border-muted) bg-(--color-bg-surface) pl-3 pr-9 text-base text-(--color-text-primary) appearance-none cursor-pointer bg-no-repeat bg-[right_12px_center] bg-[length:16px_16px] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--color-border-focus)"
+      style={{
+        backgroundImage:
+          "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2388899D' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E\")",
+      }}
+    >
+      {options.map((o) => (
+        <option key={o.value} value={o.value} className="bg-(--color-bg-overlay)">{o.label}</option>
+      ))}
+    </select>
+  )
+}
