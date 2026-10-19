@@ -159,11 +159,12 @@ export function OverviewTable({ rows, loading, emptyText, onRun, onView }: {
                 <span className="block truncate">{sdks.length ? [...new Set(sdks.map(prettySdk))].join(' · ') : <span className="text-(--color-text-tertiary)">stack not detected</span>}</span>
                 <Subtext>{r.analyzer.languages.length ? `${r.analyzer.languages.join(', ')} · ` : ''}<Unavailable what="IDE/model" /></Subtext>
               </Td>,
-              <Td key="forge"><Link href={`/forge?repo=${id}`} className={goto} aria-label={`Forge for ${r.repo.name}: ${forgeState(r.forge).label}`}><StateCell s={forgeState(r.forge)} /></Link></Td>,
-              <Td key="analyzer"><Link href={`/analyzer?repo=${id}&open=issues`} className={goto} aria-label={`Analyzer for ${r.repo.name}: ${analyzerState(r.analyzer).label}`}><StateCell s={analyzerState(r.analyzer)} /></Link></Td>,
-              <Td key="probe"><Link href={`/probe?repo=${id}`} className={goto} aria-label={`Probe for ${r.repo.name}: ${probeState(r.probe).label}`}><StateCell s={probeState(r.probe)} /></Link></Td>,
+              <Td key="forge"><Link href={`/forge?repo=${id}`} className={goto}><span className="sr-only">Forge for {r.repo.name}:</span>{' '}<StateCell s={forgeState(r.forge)} /></Link></Td>,
+              <Td key="analyzer"><Link href={`/analyzer?repo=${id}&open=issues`} className={goto}><span className="sr-only">Analyzer for {r.repo.name}:</span>{' '}<StateCell s={analyzerState(r.analyzer)} /></Link></Td>,
+              <Td key="probe"><Link href={`/probe?repo=${id}`} className={goto}><span className="sr-only">Probe for {r.repo.name}:</span>{' '}<StateCell s={probeState(r.probe)} /></Link></Td>,
               <Td key="issues">
-                <Link href={`/analyzer?repo=${id}&open=${r.analyzer.open || !r.analyzer.lastScan ? 'issues' : 'history'}`} className={goto} aria-label={`Issues for ${r.repo.name}: ${issuesSummary(r.analyzer)}`}>
+                <Link href={`/analyzer?repo=${id}&open=${r.analyzer.open || !r.analyzer.lastScan ? 'issues' : 'history'}`} className={goto}>
+                  <span className="sr-only">Issues for {r.repo.name}:</span>{' '}
                   <SevRow counts={r.analyzer.counts} />
                   <div className="text-sm text-(--color-text-tertiary) truncate group-hover:text-(--color-text-secondary)">{issuesSummary(r.analyzer)}</div>
                 </Link>
@@ -257,7 +258,7 @@ export function OverviewDetail({ r, onRun, onView }: { r: OverviewRow; onRun: (a
             )}
             {r.artifacts.map((a) => (
               <li key={`${a.runId}-${a.kind}`} className="inline-flex gap-1">
-                <button type="button" className={linkBtn} onClick={() => onView(a.runId, a.kind)} aria-label={`View ${a.kind}`}><span className="font-mono">{a.kind === 'trustabl.sarif' ? 'SARIF' : a.kind}</span></button>
+                <button type="button" className={linkBtn} onClick={() => onView(a.runId, a.kind)}><span className="sr-only">View</span>{' '}<span className="font-mono">{a.kind === 'trustabl.sarif' ? 'SARIF' : a.kind}</span></button>
                 <a className={linkBtn} href={artifactUrl(a.runId, a.kind)} download aria-label={`Download ${a.kind}`}><Download size={14} aria-hidden="true" /></a>
               </li>
             ))}

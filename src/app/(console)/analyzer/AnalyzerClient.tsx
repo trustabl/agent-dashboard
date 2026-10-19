@@ -175,7 +175,8 @@ function RepoRow({ r, state, onToggle, onScan, highlight }: {
     </Td>,
     <Td key="ready">{r.readiness !== null ? <Pill tone={readinessTone(r.readiness)}>{r.readiness}</Pill> : r.lastScan ? <Pill title="An imported SARIF has no readiness score">n/a</Pill> : <span className="text-(--color-text-tertiary)">—</span>}</Td>,
     <Td key="sev">
-      <button type="button" className="block text-left w-full cursor-pointer" onClick={() => onToggle('issues')} aria-label={`Open findings for ${r.repo.name}`}>
+      <button type="button" className="block text-left w-full cursor-pointer" onClick={() => onToggle('issues')}>
+        <span className="sr-only">Open findings for {r.repo.name}:</span>{' '}
         <SevRow counts={r.counts} />
         <Subtext>{openSummary(r)}</Subtext>
       </button>
