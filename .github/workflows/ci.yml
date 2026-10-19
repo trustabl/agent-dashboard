@@ -38,6 +38,8 @@ jobs:
           node-version: 22.22.0
           cache: npm
       - run: npm ci --no-audit --no-fund
+      - name: No high-severity advisories in runtime dependencies
+        run: make audit
       - run: make lint
       - run: make typecheck
       - run: make test

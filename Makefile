@@ -1,5 +1,5 @@
 # Trustabl Console — see README.md
-.PHONY: run dev tools test e2e parity lint typecheck check secrets wipe
+.PHONY: run dev tools test e2e parity lint typecheck check secrets audit wipe
 
 run:            ## Install what is missing, build, and serve on http://127.0.0.1:4317
 	@./scripts/run.sh
@@ -21,6 +21,9 @@ parity:         ## Artifact parity: Console run == CLI run for scan / forge / pr
 
 secrets:        ## Secret scan of the working tree and history (gitleaks; CI runs the same)
 	@gitleaks detect --source . --redact --config .gitleaks.toml
+
+audit:          ## Fail on high-severity advisories in runtime dependencies (dev-only ones are not checked)
+	@npm audit --omit=dev --audit-level=high
 
 lint:
 	@npx eslint
