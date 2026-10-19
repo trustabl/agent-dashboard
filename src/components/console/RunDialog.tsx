@@ -227,7 +227,7 @@ function RunDialog({ initial, onClose }: { initial: OpenRunArgs; onClose: () => 
           >
             <div className="flex items-start justify-between gap-4">
               <h2 id={titleId} className="m-0 mb-1.5 text-lg font-semibold text-(--color-text-primary)">Run a local tool</h2>
-              <button type="button" aria-label="Close" onClick={closeDialog} className="cursor-pointer text-(--color-text-tertiary) hover:text-(--color-text-primary)">
+              <button type="button" aria-label="Close dialog" onClick={closeDialog} className="cursor-pointer text-(--color-text-tertiary) hover:text-(--color-text-primary)">
                 <X size={16} aria-hidden="true" />
               </button>
             </div>
@@ -360,7 +360,7 @@ function RunDialog({ initial, onClose }: { initial: OpenRunArgs; onClose: () => 
         </div>
       </Modal>
 
-      {reviewRun && <SkillReview run={reviewRun} onClose={() => setReviewRun(null)} />}
+      {reviewRun && <SkillReview runId={reviewRun.id} onClose={() => setReviewRun(null)} />}
     </>
   )
 }

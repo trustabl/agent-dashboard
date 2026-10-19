@@ -3,7 +3,8 @@ import { getRepo, listRepos, type RepoRow } from '../repos'
 import { db } from '../db'
 import { listArtifacts, listRuns } from '../runner'
 import { scansForRepo, findingsForRun, readJsonArtifact, readTextArtifact, scanJson } from './scans'
-import { skillPath, currentRules } from '../actions/forge'
+import { skillPath, currentRules, forgeGeneratePreview, forgeCheckPreview } from '../actions/forge'
+import { formatCommand } from '../../shell'
 import { grantSetMembers, toolSetKey } from '../actions/probe'
 import {
   diffScans, openCount, otelRuleIds, otelState, rankFindings, readiness, severityCounts, countsAsOpen, type SeverityCounts, type OtelState,
@@ -236,6 +237,7 @@ export interface ForgeRepo {
   lastError: RunBrief | null
   analyzerSdks: string[]
   skillMtime: number | null
+  commands: { generate: string; check: string }
 }
 
 export function forgeRepo(repo: RepoRow): ForgeRepo {
@@ -271,6 +273,10 @@ export function forgeRepo(repo: RepoRow): ForgeRepo {
     lastError: lastGen && (lastGen.status === 'failed' || lastGen.status === 'interrupted') ? brief(lastGen) : null,
     analyzerSdks: (scanRun?.summary.sdks as string[]) ?? [],
     skillMtime: mtime,
+    commands: {
+      generate: formatCommand(forgeGeneratePreview(repo, {})),
+      check: formatCommand(forgeCheckPreview(repo, {})),
+    },
   }
 }
 

@@ -3,7 +3,6 @@ import { useState } from 'react'
 import { Button, Modal } from '@/components/ui'
 import { useToast } from '@/components/ui/ToastContext'
 import { post, refreshAll, useApi } from '@/lib/client/api'
-import type { RunRow } from '@/lib/types'
 import { CopyCli } from './CopyCli'
 import { ErrorBox, Note, Pill } from './primitives'
 
@@ -19,9 +18,9 @@ interface Candidate {
 
 /** Generated skill → confirm → written. Shows a diff when the repo already
  *  has a SKILL.md. Nothing touches the repo until "Write SKILL.md". */
-export function SkillReview({ run, onClose }: { run: RunRow; onClose: () => void }) {
+export function SkillReview({ runId, onClose }: { runId: string; onClose: () => void }) {
   const { toast } = useToast()
-  const { data, error } = useApi<Candidate>(`/api/forge/runs/${run.id}`, { refreshInterval: 0 })
+  const { data, error } = useApi<Candidate>(`/api/forge/runs/${runId}`, { refreshInterval: 0 })
   const [tab, setTab] = useState<'diff' | 'preview'>('diff')
   const [busy, setBusy] = useState(false)
   const [applyError, setApplyError] = useState<string | null>(null)
@@ -30,7 +29,7 @@ export function SkillReview({ run, onClose }: { run: RunRow; onClose: () => void
     setBusy(true)
     setApplyError(null)
     try {
-      const res = await post<{ path: string }>(`/api/forge/runs/${run.id}`, {})
+      const res = await post<{ path: string }>(`/api/forge/runs/${runId}`, {})
       toast(`Wrote ${res.path} · forge check started`)
       refreshAll()
       onClose()
@@ -41,7 +40,7 @@ export function SkillReview({ run, onClose }: { run: RunRow; onClose: () => void
     }
   }
   const discard = async () => {
-    await post(`/api/forge/runs/${run.id}`, undefined, 'DELETE').catch(() => {})
+    await post(`/api/forge/runs/${runId}`, undefined, 'DELETE').catch(() => {})
     refreshAll()
     onClose()
   }
