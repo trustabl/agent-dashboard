@@ -1,0 +1,29 @@
+{
+  "$comment": "Pinned CLI versions. scripts/fetch-tools.mjs downloads these release archives from GitHub and refuses any archive whose SHA-256 differs. Bump version + hashes together.",
+  "tools": {
+    "trustabl": {
+      "version": "0.1.14",
+      "repo": "trustabl/agent-reliability-analyzer",
+      "binary": "trustabl",
+      "archive": "trustabl_{version}_{os}_{arch}.tar.gz",
+      "sha256": {
+        "trustabl_0.1.14_darwin_amd64.tar.gz": "245daa020fd6ed2b1d88bbea6a476819f4061796615860e734d5f84a709dfb65",
+        "trustabl_0.1.14_darwin_arm64.tar.gz": "68c6b4634d0bed450e9dac6b720cd43753e20c200617f7a079459bd2c5cfaf34",
+        "trustabl_0.1.14_linux_amd64.tar.gz": "fffe35a8122724ff26bf40d72e1a67a1ab8ae224d9e2df4a7eff00c91aec7a96",
+        "trustabl_0.1.14_linux_arm64.tar.gz": "40c1448bb2b27b01cc7df545f5e5b9821768068178c4f6dd23fba95073deb43c"
+      }
+    },
+    "autofix": {
+      "version": "0.2.2",
+      "repo": "trustabl/agent-network-access-probe",
+      "binary": "autofix",
+      "archive": "autofix_{version}_{os}_{arch}.tar.gz",
+      "sha256": {
+        "autofix_0.2.2_darwin_amd64.tar.gz": "33ca514231a389a6711e6c1ce89c0d1733c1348ed77937396b6f4469fd12991c",
+        "autofix_0.2.2_darwin_arm64.tar.gz": "94f13ca348d60b55d7f31501e765c13a937405e42d74dc69b275a3cb4f490413",
+        "autofix_0.2.2_linux_amd64.tar.gz": "e661ea4c20afaa7d446e012d4f6ecc5654ec1e516a49ea5ce7901bc2ffd98aed",
+        "autofix_0.2.2_linux_arm64.tar.gz": "7a389c8574de57adeb47064d5386fc4677274bd420e57be995ffded588f65728"
+      }
+    }
+  }
+}
