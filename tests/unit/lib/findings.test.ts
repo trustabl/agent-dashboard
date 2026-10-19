@@ -67,6 +67,12 @@ describe('ranking and counts', () => {
     expect(openCount(scan.findings!)).toBe(13)
   })
 
+  it('the fixture has test-path findings and they never count', () => {
+    const tests = scan.findings!.filter((f) => f.origin === 'test')
+    expect(tests.length).toBeGreaterThan(0)
+    expect(openCount(tests)).toBe(0)
+  })
+
   it('excludes test-path and info findings from counts', () => {
     expect(countsAsOpen({ severity: 'high', origin: 'test' })).toBe(false)
     expect(countsAsOpen({ severity: 'info' })).toBe(false)

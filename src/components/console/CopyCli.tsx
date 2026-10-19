@@ -44,7 +44,7 @@ export function CopyCli({ command, label = 'Copy CLI', size = 'sm', variant = 'g
     variant === 'link'
       ? 'inline-flex items-center gap-1.5 text-sm font-medium text-(--color-text-secondary) hover:text-(--color-text-primary) cursor-pointer'
       : [
-          'inline-flex items-center gap-1.5 rounded-(--radius-sharp) font-medium cursor-pointer border',
+          'inline-flex items-center gap-1.5 whitespace-nowrap rounded-(--radius-sharp) font-medium cursor-pointer border',
           size === 'sm' ? 'h-8 px-2.5 text-sm' : 'h-[42px] px-4 text-base',
           variant === 'secondary'
             ? 'bg-(--color-bg-raised) border-(--color-border-muted) text-(--color-text-primary) hover:border-(--color-border-focus)'

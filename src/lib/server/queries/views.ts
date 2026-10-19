@@ -125,7 +125,10 @@ export function analyzerRepo(repo: RepoRow, { includeTests = false } = {}): Anal
   const { scans, history, all } = scanStats(repo)
   const last = all[all.length - 1]
   const prev = all[all.length - 2]
-  const scan = last?.run.action === 'scan' ? scanJson(last.run.id) : null
+  // Inventory, OTel and SDKs come from the newest real scan: a SARIF import
+  // carries findings only.
+  const lastScanRun = [...all].reverse().find((x) => x.run.action === 'scan')?.run
+  const scan = lastScanRun ? scanJson(lastScanRun.id) : null
   const visible = (f: StoredFinding) => includeTests || f.origin !== 'test'
   const cur = last ? last.findings : []
   const d = diffScans(cur, prev ? prev.findings : null)
@@ -138,7 +141,7 @@ export function analyzerRepo(repo: RepoRow, { includeTests = false } = {}): Anal
   const failed = listRuns({ repoId: repo.id, tool: 'analyzer', limit: 1 })[0]
   return {
     repo,
-    agent: (last?.run.summary.agent as string | null) ?? null,
+    agent: (lastScanRun?.summary.agent as string | null) ?? null,
     commitSha: last?.run.commit_sha ?? null,
     lastScan: last ? brief(last.run) : null,
     running: running(repo.id, 'analyzer'),
@@ -152,7 +155,7 @@ export function analyzerRepo(repo: RepoRow, { includeTests = false } = {}): Anal
     openFindings,
     resolvedLast,
     history,
-    otel: scan ? otelState(scan) : ((last?.run.summary.otel as OtelState | null) ?? null),
+    otel: scan ? otelState(scan) : null,
     otelRules: otelRuleIds(cur),
     testPathHidden: includeTests ? 0 : cur.filter((f) => f.origin === 'test').length,
     sdks: scan?.sdks ?? ((last?.run.summary.sdks as string[]) ?? []),

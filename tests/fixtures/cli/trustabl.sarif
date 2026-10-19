@@ -402,6 +402,47 @@
           }
         },
         {
+          "ruleId": "OAI-004",
+          "ruleIndex": 2,
+          "message": {
+            "text": "When a tool raises an exception, the OpenAI Agents SDK surfaces the exception's string representation to the model by default. The model receives an opaque error with no recovery contract, leading to hallucinated retries or confused responses. Setting failure_error_function lets you control what the model sees, typically a structured JSON describing the failure and what input to try instead.\n"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "tests/test_fetch.py",
+                  "uriBaseId": "REPO_ROOT"
+                },
+                "region": {
+                  "startLine": 7,
+                  "endLine": 9
+                }
+              },
+              "logicalLocations": [
+                {
+                  "name": "fetch_fixture",
+                  "kind": "function"
+                }
+              ]
+            }
+          ],
+          "rank": 70,
+          "partialFingerprints": {
+            "primaryLocationLineHash": "6f9041f66f7a519dce5249462f5a1c5d890c53f3d8d3510337670d78114c9953"
+          },
+          "properties": {
+            "confidence": 0.7,
+            "origin": "test"
+          },
+          "suppressions": [
+            {
+              "kind": "external",
+              "justification": "test-path file (internal/pathclass); reported but excluded from scoring and the exit-code gate unless --include-test-paths is set"
+            }
+          ]
+        },
+        {
           "ruleId": "OAI-005",
           "ruleIndex": 3,
           "message": {
@@ -434,6 +475,47 @@
           "properties": {
             "confidence": 0.85
           }
+        },
+        {
+          "ruleId": "OAI-005",
+          "ruleIndex": 3,
+          "message": {
+            "text": "An OpenAI Agents SDK tool that makes a network request without a timeout can hang indefinitely, blocking the agent's run loop and consuming the conversation's wall-clock budget. The SDK does not enforce timeouts on tool code.\n"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "tests/test_fetch.py",
+                  "uriBaseId": "REPO_ROOT"
+                },
+                "region": {
+                  "startLine": 7,
+                  "endLine": 9
+                }
+              },
+              "logicalLocations": [
+                {
+                  "name": "fetch_fixture",
+                  "kind": "function"
+                }
+              ]
+            }
+          ],
+          "rank": 85,
+          "partialFingerprints": {
+            "primaryLocationLineHash": "4bf329ec33cd4ae463a51408284b3d2008235bd898a3e22b75db804412d0935a"
+          },
+          "properties": {
+            "confidence": 0.85,
+            "origin": "test"
+          },
+          "suppressions": [
+            {
+              "kind": "external",
+              "justification": "test-path file (internal/pathclass); reported but excluded from scoring and the exit-code gate unless --include-test-paths is set"
+            }
+          ]
         },
         {
           "ruleId": "OAI-018",
@@ -470,6 +552,47 @@
           }
         },
         {
+          "ruleId": "OAI-018",
+          "ruleIndex": 4,
+          "message": {
+            "text": "An OpenAI Agents SDK tool builds its outbound HTTP URL from a non-literal value — typically a tool parameter interpolated into an f-string or concatenated onto a base URL. Because tool arguments are produced by the model from conversation context (including prior tool output and user input), an attacker who can shape that context can steer the request to an attacker-controlled host or to an internal address the agent's network egress can reach but the model was never meant to touch. The same channel also leaks request bodies (auth headers, JSON payloads, the model's reasoning) to whichever host the URL resolves to, so the failure mode is both SSRF and data exfiltration in one call.\n"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "tests/test_fetch.py",
+                  "uriBaseId": "REPO_ROOT"
+                },
+                "region": {
+                  "startLine": 7,
+                  "endLine": 9
+                }
+              },
+              "logicalLocations": [
+                {
+                  "name": "fetch_fixture",
+                  "kind": "function"
+                }
+              ]
+            }
+          ],
+          "rank": 55.00000000000001,
+          "partialFingerprints": {
+            "primaryLocationLineHash": "f429d212125974478d3fd922f5c97bb3d8dc7233a386378383d0b20f6452c209"
+          },
+          "properties": {
+            "confidence": 0.55,
+            "origin": "test"
+          },
+          "suppressions": [
+            {
+              "kind": "external",
+              "justification": "test-path file (internal/pathclass); reported but excluded from scoring and the exit-code gate unless --include-test-paths is set"
+            }
+          ]
+        },
+        {
           "ruleId": "OAI-026",
           "ruleIndex": 5,
           "message": {
@@ -502,6 +625,47 @@
           "properties": {
             "confidence": 0.8
           }
+        },
+        {
+          "ruleId": "OAI-026",
+          "ruleIndex": 5,
+          "message": {
+            "text": "A description under 40 characters is rarely enough to convey what a tool does, what it returns, and when to call it rather than a similarly named neighbor. The Agents SDK passes this text to the model as its only selection signal, so a stub like \"Gets data.\" leaves scope and preconditions to guesswork. The cost lands where it is hardest to see: an agent with handoffs picks between its own tools and its peers' on the strength of these strings, so a thin description does not just cause a wrong call, it can route the whole conversation to the wrong agent.\n"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "tests/test_fetch.py",
+                  "uriBaseId": "REPO_ROOT"
+                },
+                "region": {
+                  "startLine": 7,
+                  "endLine": 9
+                }
+              },
+              "logicalLocations": [
+                {
+                  "name": "fetch_fixture",
+                  "kind": "function"
+                }
+              ]
+            }
+          ],
+          "rank": 80,
+          "partialFingerprints": {
+            "primaryLocationLineHash": "681b54ca439ba9ecc2b92398cccf4b011662a7f5fddf9a21d5508def8f3e3d3e"
+          },
+          "properties": {
+            "confidence": 0.8,
+            "origin": "test"
+          },
+          "suppressions": [
+            {
+              "kind": "external",
+              "justification": "test-path file (internal/pathclass); reported but excluded from scoring and the exit-code gate unless --include-test-paths is set"
+            }
+          ]
         },
         {
           "ruleId": "OAI-106",
@@ -686,7 +850,7 @@
         }
       ],
       "automationDetails": {
-        "id": "scan_f6aba8e83f42a9fa"
+        "id": "scan_5647ba6d0430aaa5"
       },
       "originalUriBaseIds": {
         "REPO_ROOT": {
