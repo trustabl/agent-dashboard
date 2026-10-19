@@ -46,7 +46,8 @@ node_ok || install_node
 say "Node $(node -v)"
 
 # Dependencies: reinstall only when the lockfile changed.
-LOCK_SUM="$(node -e 'process.stdout.write(require("crypto").createHash("sha256").update(require("fs").readFileSync("package-lock.json")).digest("hex"))')"
+# Keyed on platform too: node_modules holds native builds (SWC, lightningcss).
+LOCK_SUM="$(node -e 'process.stdout.write(process.platform+"-"+process.arch+"-"+require("crypto").createHash("sha256").update(require("fs").readFileSync("package-lock.json")).digest("hex"))')"
 if [ ! -f node_modules/.lock-sum ] || [ "$(cat node_modules/.lock-sum)" != "$LOCK_SUM" ]; then
   say "Installing dependencies (npm ci)"
   npm ci --no-audit --no-fund --loglevel=error
