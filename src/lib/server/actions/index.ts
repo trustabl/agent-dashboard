@@ -73,10 +73,10 @@ export async function previewCommand(req: RunRequest): Promise<{ command: string
   if (req.tool === 'probe') {
     if (!repo.id) {
       const p = probePreview(repo, { ...(o as unknown as ProbeOptions), grantSet: 'draft' })
-      return { command: formatCommand(p.spec), extra: { classYaml: p.classYaml } }
+      return { command: p.command ?? formatCommand(p.spec), extra: { classYaml: p.classYaml } }
     }
     const p = probePreview(repo, o as unknown as ProbeOptions)
-    return { command: formatCommand(p.spec), note: p.note, extra: { classYaml: p.classYaml } }
+    return { command: p.command ?? formatCommand(p.spec), note: p.note, extra: { classYaml: p.classYaml } }
   }
   throw new InputError(`Unsupported action ${req.tool}/${action}.`)
 }

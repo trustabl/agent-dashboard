@@ -108,6 +108,61 @@ export function parseListFile(text: string): string[] {
     .filter((l) => l && !l.startsWith('#'))
 }
 
+export interface EgressEval {
+  host: string
+  port: number
+  protocol: string
+  /** Probe's own label for the destination (declared / observed / platform). */
+  source?: string
+  /** Tool files that reached it. */
+  tools: string[]
+  /** drafted = in network_policies.outbound; flagged = named by a flag;
+   *  excluded = observed but not drafted, with no flag naming it. */
+  outcome: 'drafted' | 'flagged' | 'excluded'
+  flags: ProbeFlag[]
+}
+
+/**
+ * The design's "observed ∩ declared-allow → draft", per destination, from
+ * real output only: profile egress (observed), the draft Probe wrote, and the
+ * flags that name a destination. Draft entries Probe added that no tool
+ * reached (e.g. platform allow list) are listed too, with no tools.
+ */
+export function evaluateEgress(profile: ProbeProfile | null, draft: DraftDoc | null, flags: FlagHit[]): EgressEval[] {
+  const key = (h: string, p: number) => `${h.toLowerCase()}:${p}`
+  const drafted = new Set((draft?.outbound ?? []).map((e) => key(String(e.host), Number(e.port))))
+  const out = new Map<string, EgressEval>()
+  for (const t of profile?.tools ?? []) {
+    for (const e of t.egress ?? []) {
+      const k = key(e.host, e.port)
+      const cur = out.get(k) ?? { host: e.host, port: e.port, protocol: e.protocol, source: e.source, tools: [], outcome: 'excluded' as const, flags: [] }
+      if (!cur.tools.includes(t.path)) cur.tools.push(t.path)
+      out.set(k, cur)
+    }
+  }
+  for (const e of draft?.outbound ?? []) {
+    const k = key(String(e.host), Number(e.port))
+    if (!out.has(k)) out.set(k, { host: String(e.host), port: Number(e.port), protocol: e.protocol, source: e.source, tools: [], outcome: 'drafted', flags: [] })
+  }
+  // Destinations Probe kept out of the profile but named in a flag
+  // ("api.stripe.com:443 (tcp) is not on the declared … allow list").
+  for (const f of flags) {
+    if (f.flag === 'egress.broad_cidr') continue
+    for (const d of f.details) {
+      const m = d.match(/(\[[0-9a-f:]+\]|[A-Za-z0-9*][A-Za-z0-9.*-]*):(\d{1,5})\b(?:\s*\((\w+)\))?/i)
+      if (!m) continue
+      const k = key(m[1], Number(m[2]))
+      if (!out.has(k)) out.set(k, { host: m[1], port: Number(m[2]), protocol: m[3] ?? 'tcp', tools: [], outcome: 'flagged', flags: [] })
+    }
+  }
+  for (const ev of out.values()) {
+    const hostRe = new RegExp(`(^|[^a-z0-9.-])${ev.host.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}([^a-z0-9.-]|$)`, 'i')
+    ev.flags = flags.filter((f) => f.flag !== 'egress.broad_cidr' && f.details.some((d) => hostRe.test(d))).map((f) => f.flag)
+    ev.outcome = drafted.has(key(ev.host, ev.port)) ? 'drafted' : ev.flags.length ? 'flagged' : 'excluded'
+  }
+  return [...out.values()].sort((a, b) => a.host.localeCompare(b.host) || a.port - b.port)
+}
+
 export type DraftState =
   | { kind: 'drafted'; count: number }
   | { kind: 'empty'; reason: string }
@@ -119,6 +174,16 @@ export function draftState(draft: DraftDoc | null, flags: FlagHit[], observed: E
   const bad = draftViolations(draft)
   if (bad.length) {
     return { kind: 'withheld', reason: `Draft withheld: it lists ${bad.map((b) => `${b.host} (${b.reason})`).join(', ')}. The Console never offers such a draft.` }
+  }
+  // A broad allow-list entry (e.g. *.com) lets any matching destination into
+  // the draft, so what Probe wrote is not a safe allow list: show it as
+  // withheld rather than as a draft.
+  const broad = flags.find((f) => f.flag === 'egress.broad_cidr')
+  if (draft.outbound.length > 0 && broad) {
+    return {
+      kind: 'withheld',
+      reason: `Draft withheld: the allow list you supplied has broad entries (${broad.details.join(', ')}), so ${draft.outbound.length} destination(s) were drafted only because they matched a wildcard. Replace them with exact hosts and re-run.`,
+    }
   }
   if (draft.outbound.length > 0) return { kind: 'drafted', count: draft.outbound.length }
   if (flags.length) {

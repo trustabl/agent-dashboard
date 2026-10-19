@@ -9,6 +9,7 @@ import { scansForRepo, scanJson } from '../queries/scans'
 import { cacheState, draftState, GUARD_DENY, parseDraft, parseListFile, probeFlags, sessionExtras, uniqueEgress } from '../../probe'
 import type { ProbeFindings, ProbeProfile } from '../../types'
 import { stripAnsi } from '../../text'
+import { shQuote } from '../../shell'
 
 export type Runner = 'docker' | 'openshell'
 
@@ -164,9 +165,46 @@ export function probePreview(repo: RepoRow, o: ProbeOptions) {
   const className = slug(repo.name.split('/').pop() ?? repo.name)
   return {
     spec: { bin: binaryPath('autofix'), args: argvFor({ ...o, model: o.model || '<model>' }, files), cwd: repo.path, stdin: QUIT_REVIEW },
+    command: members.length ? standaloneCommand(repo, o, className, members) : null,
     classYaml: members.length ? classYaml(className, members) : null,
     note,
   }
+}
+
+/**
+ * "Copy CLI" for a Probe run that has not happened yet: one paste-able shell
+ * command that writes the same class YAML and list files the Console would
+ * write (into a fresh temp folder), then runs the same `autofix fix` argv.
+ * Env fixture values are never embedded — the command reads them from
+ * $ENV_FIXTURES; a missing model reads $PROBE_MODEL.
+ */
+export function standaloneCommand(repo: RepoRow, o: ProbeOptions, className: string, members: ClassMember[]): string {
+  const lines = (text: string) => text.split(/\r?\n/)
+  const write = (body: string[], file: string) => `printf '%s\\n' ${body.map(shQuote).join(' ')} > "$D/${file}"`
+  const userDeny = parseListFile(o.denyList ?? '')
+  const steps = [
+    `cd ${shQuote(repo.path)}`,
+    'D="$(mktemp -d)"',
+    'mkdir "$D/out"',
+    write(lines(classYaml(className, members).trimEnd()), 'class.yaml'),
+    write([...userDeny, ...GUARD_DENY.filter((g) => !userDeny.includes(g))], 'deny-list.txt'),
+  ]
+  if (o.allowList?.trim()) steps.push(write(lines(o.allowList.trim()), 'allow-list.txt'))
+  if (o.platformAllowList?.trim()) steps.push(write(lines(o.platformAllowList.trim()), 'platform-allow-list.txt'))
+  const f: Files = {
+    classFile: '\u0000class.yaml',
+    outDir: '\u0000out',
+    deny: '\u0000deny-list.txt',
+    allow: o.allowList?.trim() ? '\u0000allow-list.txt' : undefined,
+    platform: o.platformAllowList?.trim() ? '\u0000platform-allow-list.txt' : undefined,
+    fixtures: o.envFixtures?.trim() ? '\u0001' : undefined,
+  }
+  const model = o.model?.trim() ? o.model.trim() : '\u0002'
+  const argv = [binaryPath('autofix'), ...argvFor({ ...o, model }, f)]
+    .map((a) => (a.startsWith('\u0000') ? `"$D/${a.slice(1)}"` : a === '\u0001' ? '"${ENV_FIXTURES:?set ENV_FIXTURES to your KEY=value fixtures file}"' : a === '\u0002' ? '"${PROBE_MODEL:?set PROBE_MODEL to the model Probe should use}"' : shQuote(a)))
+    .join(' ')
+  steps.push(`printf 'q\\n' | ${argv}`)
+  return steps.join(' && ')
 }
 
 const ARTIFACTS = ['probe.profile.json', 'probe.findings.json', 'network_policies.draft.yaml', 'autofix-attestation.json']

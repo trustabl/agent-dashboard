@@ -25,6 +25,8 @@ export interface OpenRunArgs {
   repoId?: string
   /** Forge: go straight to `forge check` instead of generate. */
   action?: 'generate' | 'check'
+  /** Probe: preselect the Analyzer-extracted grant set or a draft agent. */
+  grantSet?: 'analyzer' | 'draft'
 }
 
 interface Ctx {
@@ -103,7 +105,7 @@ function RunDialog({ initial, onClose }: { initial: OpenRunArgs; onClose: () => 
   const [useCache, setUseCache] = useState(true)
   const [allowWrite, setAllowWrite] = useState(false)
   const [confirmWriteOpen, setConfirmWriteOpen] = useState(false)
-  const [grantSetChoice, setGrantSet] = useState<'analyzer' | 'draft' | null>(null)
+  const [grantSetChoice, setGrantSet] = useState<'analyzer' | 'draft' | null>(initial.grantSet ?? null)
 
   const [preview, setPreview] = useState<{ command?: string; note?: string; extra?: { classYaml?: string | null } }>({})
   const [previewError, setPreviewError] = useState<string | null>(null)

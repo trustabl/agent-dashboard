@@ -5,12 +5,12 @@ import { listArtifacts, listRuns } from '../runner'
 import { scansForRepo, findingsForRun, readJsonArtifact, readTextArtifact, scanJson } from './scans'
 import { skillPath, currentRules, forgeGeneratePreview, forgeCheckPreview } from '../actions/forge'
 import { formatCommand } from '../../shell'
-import { grantSetMembers, toolSetKey } from '../actions/probe'
+import { grantSetMembers, probePreview, toolSetKey, type ProbeOptions } from '../actions/probe'
 import {
   diffScans, openCount, otelRuleIds, otelState, rankFindings, readiness, severityCounts, countsAsOpen, type SeverityCounts, type OtelState,
 } from '../../findings'
 import { outlineSkill, parseStamp, staleReason, type ForgeCheckResult, type ForgeStamp, type OtelInSkill, type SkillOutline } from '../../forge'
-import { draftState, parseDraft, probeFlags, sessionExtras, uniqueEgress, cacheState, type DraftState, type FlagHit } from '../../probe'
+import { draftState, evaluateEgress, parseDraft, parseListFile, probeFlags, sessionExtras, uniqueEgress, cacheState, type DraftState, type EgressEval, type FlagHit } from '../../probe'
 import type { Endpoint, FindingStatus, ProbeFindings, ProbeProfile, RunRow, ScanResult, StoredFinding } from '../../types'
 import { stripAnsi } from '../../text'
 import { paths } from '../paths'
@@ -295,23 +295,35 @@ export interface ProbeRepo {
   grantSetHash: string | null
   grantSet: { path: string; label: string }[]
   egress: Endpoint[]
-  perTool: { path: string; label: string; cacheHit: boolean; harnessId?: string; egress: Endpoint[]; findings: number }[]
+  perTool: { path: string; label: string; cacheHit: boolean; harnessId?: string; egress: Endpoint[]; findings: number; skipped: boolean }[]
   draft: DraftState
   draftYaml: string | null
   flags: FlagHit[]
   extras: ProbeFindings['findings']
   cache: string | null
   runner: string | null
+  /** Which grant set the last run used. */
+  grantSetMode: ProbeOptions['grantSet'] | null
   inputs: { allowList: boolean; platformAllowList: boolean; denyList: boolean; envFixtures: boolean; allowWriteTools: boolean; noCache: boolean }
+  /** The list entries the last run passed (never env fixture values). */
+  lists: { allow: string[]; platform: string[]; deny: string[] }
+  evaluation: EgressEval[]
   observedFlagged: string[]
+  /** Side-effect tools Probe did not execute (no --allow-write-tools). */
+  skippedWriteTools: string[]
   analyzerTools: number
+  /** The grant set the latest Analyzer scan extracted (tool names per file). */
+  analyzerGrantSet: { label: string; tools: string[] }[]
+  hasScan: boolean
   untested: boolean
   artifacts: string[]
+  /** Copy CLI for the next run: the Analyzer grant set if there is one, else a draft agent. */
+  nextCommand: string
 }
 
 function toolLabel(file: string, repo: RepoRow, members: { path: string; entrypoint?: string; tools?: string[] }[]): string {
   const m = members.find((x) => x.entrypoint && `${x.path}/${x.entrypoint}` === file)
-  const rel = file.startsWith(repo.path + '/') ? file.slice(repo.path.length + 1) : file
+  const rel = relTo(repo, file)
   return m?.tools?.length ? `${m.tools.join(', ')} (${rel})` : rel
 }
 
@@ -328,15 +340,26 @@ export function probeRepo(repo: RepoRow): ProbeRepo {
   const members = (run?.options.members as { path: string; entrypoint?: string; tools?: string[] }[]) ?? []
   let analyzerTools = 0
   let untested = false
+  let analyzerGrantSet: ProbeRepo['analyzerGrantSet'] = []
   try {
     const cur = grantSetMembers(repo, 'analyzer').members
     analyzerTools = cur.reduce((n, m) => n + (m.tools?.length ?? 0), 0)
+    analyzerGrantSet = cur.map((m) => ({ label: relTo(repo, `${m.path}/${m.entrypoint ?? ''}`), tools: m.tools ?? [] }))
     const key = toolSetKey(cur)
     untested = !listRuns({ repoId: repo.id, tool: 'probe', status: 'succeeded', limit: 100 }).some((r) => r.options.toolSetKey === key)
   } catch {
     /* no Analyzer grant set */
   }
-  const o = (run?.options ?? {}) as Record<string, unknown>
+  const o = (run?.options ?? {}) as Partial<ProbeOptions> & Record<string, unknown>
+  const skipped = (findings?.findings ?? []).filter((f) => /Sandbox execution skipped/i.test(f.title)).map((f) => f.file ?? '')
+  const hasScan = scansForRepo(repo.id).some((r) => r.action === 'scan')
+  const nextMode: ProbeOptions['grantSet'] = analyzerTools ? 'analyzer' : 'draft'
+  const next = probePreview(repo, {
+    grantSet: nextMode,
+    runner: (o.runner as ProbeOptions['runner']) ?? 'openshell',
+    model: (o.model as string) ?? '',
+    llmUrl: o.llmUrl as string | undefined,
+  })
   return {
     repo,
     lastRun: run ? brief(run) : null,
@@ -347,7 +370,13 @@ export function probeRepo(repo: RepoRow): ProbeRepo {
     grantSet: (profile?.grant_set ?? []).map((p) => ({ path: p, label: toolLabel(p, repo, members) })),
     egress,
     perTool: (profile?.tools ?? []).map((t) => ({
-      path: t.path, label: toolLabel(t.path, repo, members), cacheHit: t.cache_hit, harnessId: t.harness_id, egress: t.egress ?? [], findings: t.findings_count,
+      path: t.path,
+      label: toolLabel(t.path, repo, members),
+      cacheHit: t.cache_hit,
+      harnessId: t.harness_id,
+      egress: t.egress ?? [],
+      findings: t.findings_count,
+      skipped: skipped.includes(t.path),
     })),
     draft: run ? draftState(draft, flags, egress) : { kind: 'none' },
     draftYaml: yamlText,
@@ -355,6 +384,7 @@ export function probeRepo(repo: RepoRow): ProbeRepo {
     extras: sessionExtras(findings),
     cache: cacheState(profile),
     runner: (o.runner as string) ?? null,
+    grantSetMode: (o.grantSet as ProbeOptions['grantSet']) ?? null,
     inputs: {
       allowList: !!(o.allowList as string)?.trim(),
       platformAllowList: !!(o.platformAllowList as string)?.trim(),
@@ -363,11 +393,25 @@ export function probeRepo(repo: RepoRow): ProbeRepo {
       allowWriteTools: !!o.allowWriteTools,
       noCache: !!o.noCache,
     },
+    lists: {
+      allow: parseListFile((o.allowList as string) ?? ''),
+      platform: parseListFile((o.platformAllowList as string) ?? ''),
+      deny: parseListFile((o.denyList as string) ?? ''),
+    },
+    evaluation: run ? evaluateEgress(profile, draft, flags) : [],
     observedFlagged: flags.flatMap((f) => f.details),
+    skippedWriteTools: skipped.map((p) => toolLabel(p, repo, members)),
     analyzerTools,
+    analyzerGrantSet,
+    hasScan,
     untested,
     artifacts: run ? listArtifacts(run.id).map((a) => a.kind) : [],
+    nextCommand: next.command ?? formatCommand(next.spec),
   }
+}
+
+function relTo(repo: RepoRow, file: string): string {
+  return file.startsWith(repo.path + '/') ? file.slice(repo.path.length + 1) : file
 }
 
 function readRunFile(runId: string, name: string): string {
