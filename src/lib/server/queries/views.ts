@@ -16,7 +16,7 @@ import { stripAnsi } from '../../text'
 import { paths } from '../paths'
 
 // View models for each page. Every value is read from a CLI artifact or the
-// Console's own run history.
+// Console's own run history (docs/ARCHITECTURE.md §4.8).
 
 export interface RunBrief {
   id: string

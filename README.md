@@ -79,6 +79,8 @@ make parity         # artifacts from a Console run == the same CLI run (timestam
 make secrets        # gitleaks, as in CI
 ```
 
+See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) for the architecture
+(components, API routes, run engine, data layer, conventions).
 Contributions: [`CONTRIBUTING.md`](CONTRIBUTING.md).
 
 ## License
