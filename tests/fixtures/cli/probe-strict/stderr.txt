@@ -1,0 +1,76 @@
+
+                                                                    
+     _                       _            _      _                  
+    | |_   _ _   _  _   ___ | |_   __ _  | |__  | |                 
+    |  _| | '_| | || | (_-< |  _| / _` | | '_ \ | |                 
+     \__| |_|    \_,_| /__/  \__| \__,_| |_.__/ |_|                 
+                      __            ____    _                       
+     ____ _  __  __  / /_  ____    / __/   (_)   _  __              
+    / __ `/ / / / / / __/ / __ \  / /_    / /   | |/_/              
+   / /_/ / / /_/ / / /_  / /_/ / / __/   / /   _>  <                
+   \__,_/  \__,_/  \__/  \____/ /_/     /_/   /_/|_|                
+     v0.2.2  ·  network egress → least-privilege OpenShell policy   
+                                                                    
+  Source:        /tmp/probe-strict/out
+  Entrypoints:   /tmp/trustabl-fixtures/rese…
+  Runner:        docker · auto
+  Model:         qwen2.5-coder:32b
+
+◎  Probing class research-tools  (2 tools)
+  ⊘ [1/2]  /tmp/trustabl-fixtures/research-tools/refund-tool/tool.py  skipped — irreversible operation detected (use --allow-write-tools to override)
+  ✓ [2/2]  /tmp/trustabl-fixtures/research-tools/research-assistant/tool.py  (cached)
+
+─── Sandbox output ──────────────────────── 229ms
+  Traceback (most recent call last):
+    File "/sandbox/tool/tool.py", line 33, in <module>
+      result = search_web("latest AI safety research 2025")
+    File "/sandbox/tool/tool.py", line 8, in search_web
+      if not API_KEY:
+             ^^^^^^^
+  NameError: name 'API_KEY' is not defined
+  1 runtime candidate(s) found
+
+Policy written to /tmp/probe-strict/out/network_policies.draft.yaml (unsigned draft)
+Profile written to /tmp/probe-strict/out/probe.profile.json
+Findings written to /tmp/probe-strict/out/probe.findings.json
+
+─── Behavioral Attestation ──────────────────────────────
+  Tool(s):     /tmp/trustabl-fixtures/research-tools/refund-tool/tool.py  /tmp/trustabl-fixtures/research-tools/research-assistant/tool.py  [python]
+  Score:       ░░░░░░░░░░░░░░░░░░░░  0 / 100
+
+  Outbound:    api.perplexity.ai:443
+
+  Findings:    ● 2 critical  ·  ⚠ 4 warning
+
+  source:e3b0c44298fc1c14...  ✓ behavioral fingerprint
+  sha256:e2d4335de8fc47da...  ✓ content-addressed
+
+Attestation written to /tmp/probe-strict/out/autofix-attestation.json
+
+Found 6 candidate(s) across 2 file(s) — generating fixes · concurrency 3
+
+  [░░░░░░░░░░░░░░░░░░░░]    0%  0/2[K  ✗ [1/2]  research-assistant/tool.py             0 fixes  0.0s  LLM error: LLM unreachable (http://127.0.0.1:9/v1, model: qwen2.5-coder:32b): Post "http://127.0.0.1:9/v1/chat/completions": dial tcp 127.0.0.1:9: connect: connection refused
+  [██████████░░░░░░░░░░]   50%  1/2[K  ✗ [2/2]  refund-tool/tool.py                    0 fixes  0.0s  LLM error: LLM unreachable (http://127.0.0.1:9/v1, model: qwen2.5-coder:32b): Post "http://127.0.0.1:9/v1/chat/completions": dial tcp 127.0.0.1:9: connect: connection refused
+  [████████████████████]  100%  2/2  done
+
+
+  ● CRITICAL  Prompt injection risk — unfiltered external content returned to agent  [1/6] /tmp/trustabl-fixtures/research-tools/refund-tool/tool.py
+  [static_analysis]  Unfiltered external content: 'refund_charge' returns raw HTTP response content on line 22 — a malicious server response could inject instructions into the agent
+  ✗ Error: LLM error: LLM unreachable (http://127.0.0.1:9/v1, model: qwen2.5-coder:32b): Post "http://127.0.0.1:9/v1/chat/completions": dial tcp 127.0.0.1:9: connect: connection refused
+
+  ⚠ WARNING  Sandbox execution skipped — tool appears to perform an irreversible operation  [2/6] /tmp/trustabl-fixtures/research-tools/refund-tool/tool.py
+  [static_analysis]  Mutating operation: Line 16 performs an operation with a real-world side effect
+  ✗ Error: LLM error: LLM unreachable (http://127.0.0.1:9/v1, model: qwen2.5-coder:32b): Post "http://127.0.0.1:9/v1/chat/completions": dial tcp 127.0.0.1:9: connect: connection refused
+
+  ⚠ WARNING  Observed egress not on the declared allow list  [3/6] /tmp/trustabl-fixtures/research-tools/refund-tool/tool.py
+  [egress.not_in_org_allow]  Undeclared destination: api.stripe.com:443 (tcp) is not on the declared or platform allow list
+  ✗ Error: LLM error: LLM unreachable (http://127.0.0.1:9/v1, model: qwen2.5-coder:32b): Post "http://127.0.0.1:9/v1/chat/completions": dial tcp 127.0.0.1:9: connect: connection refused
+
+  ● CRITICAL  No error handling — tool crashes agent  [4/6] /tmp/trustabl-fixtures/research-tools/research-assistant/tool.py
+  [tool_output]  Agent crash: Tool raised an unhandled exception that would crash the agent run.
+  [tool_output]  Agent crash: Error: name 'API_KEY' is not defined
+  ✗ Error: LLM error: LLM unreachable (http://127.0.0.1:9/v1, model: qwen2.5-coder:32b): Post "http://127.0.0.1:9/v1/chat/completions": dial tcp 127.0.0.1:9: connect: connection refused
+
+  ⚠ WARNING  Unbounded tool output — can overflow agent context window  [5/6] /tmp/trustabl-fixtures/research-tools/research-assistant/tool.py
+  [static_analysis]  Unbounded output: Line 30 returns a full response body or file read with no size limit — could push megabytes into agent context
+  ✗ Error: LLM error: LLM unreachable (http://127.0.0.1:9/v1, model: qwen2.5-coder:32b): Post "http://127.0.0.1:9/v1/chat/completions": dial tcp 127.0.0.1:9: connect: connection refused

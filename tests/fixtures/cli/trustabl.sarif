@@ -1,0 +1,698 @@
+{
+  "version": "2.1.0",
+  "$schema": "https://json.schemastore.org/sarif-2.1.0.json",
+  "runs": [
+    {
+      "tool": {
+        "driver": {
+          "name": "trustabl",
+          "fullName": "Trustabl — find and fix agent reliability issues",
+          "informationUri": "https://github.com/trustabl/agent-reliability-analyzer",
+          "version": "0.1.14",
+          "semanticVersion": "0.1.14",
+          "rules": [
+            {
+              "id": "CSDK-203",
+              "shortDescription": {
+                "text": "Repo ships Claude Agent SDK code without an agent-guidance doc (AGENTS.md/CLAUDE.md)"
+              },
+              "fullDescription": {
+                "text": "A repository that builds on the Claude Agent SDK but ships no agent-guidance doc — CLAUDE.md (the Claude Code convention) or AGENTS.md (the cross-vendor one) — leaves any coding agent that opens the repo with no project-specific guidance. The conventions, build commands, test runners, lint scripts, and \"do not touch\" boundaries a human maintainer would describe in onboarding are absent, so the agent has to infer them from the source on every session and frequently guesses wrong — bypassing the project's lint, picking the wrong test command, or violating commit conventions that were never written down anywhere it could read. The cost compounds: each new contributor (human or agent) reinvents the same wrong assumptions.\n"
+              },
+              "help": {
+                "text": "Add a CLAUDE.md (or an AGENTS.md) at the repository root documenting how to build, test, and lint the project, the coding conventions the agent must respect, the directories or files it must not modify, and any project-specific safety guardrails (e.g. \"never run migrations\", \"never push to main\"). Treat it as the project's agent-facing README and keep it under version control so reviewers see drift.\n"
+              },
+              "defaultConfiguration": {
+                "level": "note"
+              },
+              "properties": {
+                "confidence": 0.9,
+                "security-severity": "3.0",
+                "tags": [
+                  "claude_sdk",
+                  "repo",
+                  "python"
+                ]
+              }
+            },
+            {
+              "id": "CSDK-208",
+              "shortDescription": {
+                "text": "Claude Agent SDK project wires no observability"
+              },
+              "fullDescription": {
+                "text": "This project runs Claude Agent SDK agents but wires no observability backend. No OpenTelemetry provider and no third-party instrumentation (Langfuse, Logfire, Braintrust, Phoenix, Weave, AgentOps) appears in the parsed source. A subagent that picks the wrong tool, a permission mode that is broader than intended, or a run that silently exhausts its turns leaves no trace to inspect afterwards.\n"
+              },
+              "help": {
+                "text": "Install an OpenTelemetry tracer provider at process start (opentelemetry.trace.set_tracer_provider(...)) with an OTLP exporter pointed at your collector, or initialize a vendor SDK — logfire.configure(), Langfuse's CallbackHandler, or braintrust.init_logger() — before the first query() call.\n"
+              },
+              "defaultConfiguration": {
+                "level": "note"
+              },
+              "properties": {
+                "confidence": 0.75,
+                "security-severity": "3.0",
+                "tags": [
+                  "claude_sdk",
+                  "repo",
+                  "python"
+                ]
+              }
+            },
+            {
+              "id": "OAI-004",
+              "shortDescription": {
+                "text": "Tool has no failure_error_function"
+              },
+              "fullDescription": {
+                "text": "When a tool raises an exception, the OpenAI Agents SDK surfaces the exception's string representation to the model by default. The model receives an opaque error with no recovery contract, leading to hallucinated retries or confused responses. Setting failure_error_function lets you control what the model sees, typically a structured JSON describing the failure and what input to try instead.\n"
+              },
+              "help": {
+                "text": "Pass failure_error_function= to the decorator. The function should receive the exception and the run context, and return a structured string the model can reason about.\n"
+              },
+              "defaultConfiguration": {
+                "level": "note"
+              },
+              "properties": {
+                "confidence": 0.7,
+                "security-severity": "3.0",
+                "tags": [
+                  "openai_sdk",
+                  "tool",
+                  "python"
+                ]
+              }
+            },
+            {
+              "id": "OAI-005",
+              "shortDescription": {
+                "text": "Network call has no timeout"
+              },
+              "fullDescription": {
+                "text": "An OpenAI Agents SDK tool that makes a network request without a timeout can hang indefinitely, blocking the agent's run loop and consuming the conversation's wall-clock budget. The SDK does not enforce timeouts on tool code.\n"
+              },
+              "help": {
+                "text": "Pass timeout= (typically 5-30 seconds depending on the endpoint). Surface timeouts as a structured tool error the model can react to, using failure_error_function (see OAI-004).\n"
+              },
+              "defaultConfiguration": {
+                "level": "error"
+              },
+              "properties": {
+                "confidence": 0.85,
+                "security-severity": "7.5",
+                "tags": [
+                  "openai_sdk",
+                  "tool",
+                  "python"
+                ]
+              }
+            },
+            {
+              "id": "OAI-018",
+              "shortDescription": {
+                "text": "Tool builds outbound URL from non-literal value"
+              },
+              "fullDescription": {
+                "text": "An OpenAI Agents SDK tool builds its outbound HTTP URL from a non-literal value — typically a tool parameter interpolated into an f-string or concatenated onto a base URL. Because tool arguments are produced by the model from conversation context (including prior tool output and user input), an attacker who can shape that context can steer the request to an attacker-controlled host or to an internal address the agent's network egress can reach but the model was never meant to touch. The same channel also leaks request bodies (auth headers, JSON payloads, the model's reasoning) to whichever host the URL resolves to, so the failure mode is both SSRF and data exfiltration in one call.\n"
+              },
+              "help": {
+                "text": "Treat the model-supplied value as untrusted input to URL construction. Validate it against an allow-list of permitted hosts/path segments before any HTTP client touches it, or look the value up against a server-side registry and build the URL from the registry's trusted entry. If the value is meant to be an opaque ID (e.g. a connection_id), pass it as a query parameter or path segment of a fixed base URL and reject characters that would let it escape that slot. Credit is given when the body checks the parsed hostname against a named allow-list; also require https:// and cap or disable redirects (follow_redirects=False / allow_redirects=False).\n"
+              },
+              "defaultConfiguration": {
+                "level": "warning"
+              },
+              "properties": {
+                "confidence": 0.55,
+                "security-severity": "5.5",
+                "tags": [
+                  "openai_sdk",
+                  "tool",
+                  "python"
+                ]
+              }
+            },
+            {
+              "id": "OAI-026",
+              "shortDescription": {
+                "text": "Tool description is too short to guide model selection"
+              },
+              "fullDescription": {
+                "text": "A description under 40 characters is rarely enough to convey what a tool does, what it returns, and when to call it rather than a similarly named neighbor. The Agents SDK passes this text to the model as its only selection signal, so a stub like \"Gets data.\" leaves scope and preconditions to guesswork. The cost lands where it is hardest to see: an agent with handoffs picks between its own tools and its peers' on the strength of these strings, so a thin description does not just cause a wrong call, it can route the whole conversation to the wrong agent.\n"
+              },
+              "help": {
+                "text": "Expand the description to at least a full sentence covering inputs, outputs, and the situation in which this tool should be used over the alternatives. Where two tools are easy to confuse, say in each which one the other case belongs to.\n"
+              },
+              "defaultConfiguration": {
+                "level": "note"
+              },
+              "properties": {
+                "confidence": 0.8,
+                "security-severity": "3.0",
+                "tags": [
+                  "openai_sdk",
+                  "tool",
+                  "python"
+                ]
+              }
+            },
+            {
+              "id": "OAI-106",
+              "shortDescription": {
+                "text": "Agent wires MCP servers without input_guardrails"
+              },
+              "fullDescription": {
+                "text": "The agent imports tools from one or more MCP servers (mcp_servers=) but has no input_guardrails. MCP tool descriptions are advertised by the MCP server, which is a separate trust boundary; an attacker- controlled or compromised MCP server can craft tool descriptions that bait the agent into harmful actions — the \"tool poisoning\" pattern documented in the MCP threat literature. Detection only fires when mcp_servers is actually configured with at least one server (an empty list wires nothing), so agents without MCP are unaffected.\n"
+              },
+              "help": {
+                "text": "Add at least one @input_guardrail that inspects the user's input AND the resolved tool list before the model is invoked. Pin MCP servers to known-trusted URLs/checksums and document the trust assumption.\n"
+              },
+              "defaultConfiguration": {
+                "level": "error"
+              },
+              "properties": {
+                "confidence": 0.9,
+                "security-severity": "7.5",
+                "tags": [
+                  "openai_sdk",
+                  "agent",
+                  "python"
+                ]
+              }
+            },
+            {
+              "id": "OAI-109",
+              "shortDescription": {
+                "text": "Agent uses WebSearchTool without input_guardrails"
+              },
+              "fullDescription": {
+                "text": "This agent is wired with WebSearchTool, which fetches content from the public internet, but has no input_guardrails configured. Web search results are untrusted external data that can contain prompt injection payloads. An attacker can craft malicious content on a page they control; when the agent searches and retrieves that content, the injected instructions can hijack the agent's behavior — exfiltrating data, calling other tools, or manipulating outputs.\n"
+              },
+              "help": {
+                "text": "Add at least one @input_guardrail that validates user queries before they reach WebSearchTool. The guardrail should reject queries that could lead to attacker-controlled content (e.g. queries containing raw URLs or suspicious redirection patterns). Wire it via input_guardrails=[...] on the Agent(...) constructor.\n"
+              },
+              "defaultConfiguration": {
+                "level": "error"
+              },
+              "properties": {
+                "confidence": 0.85,
+                "security-severity": "7.5",
+                "tags": [
+                  "openai_sdk",
+                  "agent",
+                  "python"
+                ]
+              }
+            },
+            {
+              "id": "OAI-110",
+              "shortDescription": {
+                "text": "Agent wires a content-fetching tool without output_guardrails"
+              },
+              "fullDescription": {
+                "text": "This agent pulls in untrusted external content (web search, file search, or a code interpreter) but has no output_guardrails. Input guardrails (OAI-101/106/109) screen what reaches the model; output guardrails are the SDK's mechanism to screen the final response before it reaches the user. Without them, a prompt-injected tool result can drive an exfiltrating or unsafe final answer with nothing inspecting the egress. The check is scoped to agents that actually wire a content-fetching hosted tool, since a plain agent legitimately needs no output guardrail.\n"
+              },
+              "help": {
+                "text": "Add at least one output guardrail (a function decorated @output_guardrail or an OutputGuardrail instance) and wire it via output_guardrails=[...] on the Agent(...) constructor. It should inspect the final output for data exfiltration and unsafe content before it is returned.\n"
+              },
+              "defaultConfiguration": {
+                "level": "warning"
+              },
+              "properties": {
+                "confidence": 0.6,
+                "security-severity": "5.5",
+                "tags": [
+                  "openai_sdk",
+                  "agent",
+                  "python"
+                ]
+              }
+            },
+            {
+              "id": "OAI-118",
+              "shortDescription": {
+                "text": "Agent wires an MCP server with no tool_filter allow-list"
+              },
+              "fullDescription": {
+                "text": "This agent wires an MCP server (MCPServerStdio, MCPServerSse, or MCPServerStreamableHttp) with no tool_filter. Unlike an explicit tools=[...] list, an MCP server connects the agent to every tool that server currently exposes — a surface that is not enumerable from the agent's source, can grow or change behavior whenever the server is updated, and sits on the far side of a trust boundary this codebase does not control. tool_filter (via create_static_tool_filter or a callable) is the SDK's only mechanism for narrowing that catalog to a named allow-list; when it is None (the default), no filtering occurs at all, so a poisoned or newly-added tool description reaches the model unfiltered.\n"
+              },
+              "help": {
+                "text": "Pass tool_filter=create_static_tool_filter(allowed_tool_names=[...]) to the MCP server constructor, naming the specific tool names this agent is allowed to call, e.g. MCPServerStdio(params=..., tool_filter= create_static_tool_filter(allowed_tool_names=[\"read_file\", \"list_directory\"])). Re-review the filter whenever the agent's task changes, and treat any server tool not in the list as excluded by default.\n"
+              },
+              "defaultConfiguration": {
+                "level": "error"
+              },
+              "properties": {
+                "confidence": 0.75,
+                "security-severity": "7.5",
+                "tags": [
+                  "openai_sdk",
+                  "agent",
+                  "python"
+                ]
+              }
+            },
+            {
+              "id": "OAI-201",
+              "shortDescription": {
+                "text": "Project uses default OpenAI tracing"
+              },
+              "fullDescription": {
+                "text": "The project uses the OpenAI Agents SDK with default tracing enabled. By default, inputs, tool calls, tool outputs, and agent responses are sent to OpenAI's hosted tracing backend. For projects handling sensitive data (PII, credentials, internal documents), this is a data egress channel that is easy to miss.\n"
+              },
+              "help": {
+                "text": "Either disable tracing entirely (set OPENAI_AGENTS_DISABLE_TRACING=1 in the environment) OR register a custom trace processor via agents.tracing.add_trace_processor(...) that redacts sensitive fields before they leave the process.\n"
+              },
+              "defaultConfiguration": {
+                "level": "warning"
+              },
+              "properties": {
+                "confidence": 0.8,
+                "security-severity": "5.5",
+                "tags": [
+                  "openai_sdk",
+                  "repo",
+                  "python"
+                ]
+              }
+            },
+            {
+              "id": "OAI-202",
+              "shortDescription": {
+                "text": "OpenAI Agents project ships no agent-guidance doc (AGENTS.md/CLAUDE.md)"
+              },
+              "fullDescription": {
+                "text": "The project uses the OpenAI Agents SDK in code but ships no agent-guidance doc (AGENTS.md or CLAUDE.md) at the repo root. AGENTS.md is the cross-vendor convention an editing coding agent reads before it acts; with neither file present, any agent that opens this repo has no project-specific guidance on Agent vs SandboxAgent choice, handoff topology, required input/output guardrails, tool_choice settings, or the local test and build commands. The likely consequence is generated code that bypasses the project's safety contracts because nothing in-tree teaches the agent the local rules.\n"
+              },
+              "help": {
+                "text": "Add an AGENTS.md at the repo root (the cross-vendor standard; a CLAUDE.md also satisfies this rule). State whether the project uses Agent or SandboxAgent, list required guardrails (input_guardrails, output_guardrails) and tool_choice conventions, note any handoff or tracing policy, and give the exact test, lint, and build commands. Keep it short and concrete so an editing agent can act on it without re-deriving the conventions.\n"
+              },
+              "defaultConfiguration": {
+                "level": "note"
+              },
+              "properties": {
+                "confidence": 0.9,
+                "security-severity": "3.0",
+                "tags": [
+                  "openai_sdk",
+                  "repo",
+                  "python"
+                ]
+              }
+            },
+            {
+              "id": "OAI-203",
+              "shortDescription": {
+                "text": "OpenAI Agents SDK project wires no observability"
+              },
+              "fullDescription": {
+                "text": "This project runs OpenAI Agents SDK agents but wires no observability backend: no OpenTelemetry provider, no Langfuse, Logfire, Phoenix, Braintrust, Weave, or AgentOps instrumentation appears anywhere in the parsed source. When an agent misbehaves in production — a tool loop, a silent guardrail trip, a cost spike — there is no trace to read, so the only evidence is whatever the application happened to log. Agent runs are non-deterministic, which makes after-the-fact reconstruction from logs alone unreliable.\n"
+              },
+              "help": {
+                "text": "Wire a trace backend. The SDK traces natively: register a processor with agents.tracing.add_trace_processor(...) to ship spans to your collector, or install an OpenTelemetry provider (opentelemetry.trace.set_tracer_provider(...)) with an OTLP exporter. If you already run a vendor — Langfuse, Logfire, Braintrust, Phoenix — initialize its SDK at process start.\n"
+              },
+              "defaultConfiguration": {
+                "level": "note"
+              },
+              "properties": {
+                "confidence": 0.75,
+                "security-severity": "3.0",
+                "tags": [
+                  "openai_sdk",
+                  "repo",
+                  "python"
+                ]
+              }
+            }
+          ],
+          "properties": {
+            "rules_from_cache": false,
+            "rules_source": "https://github.com/trustabl/agent-reliability-rules",
+            "rules_version": "ff6ff960fa3d868feb400d6f12bd7413bc6335ee5751edee1b29a76e47533367"
+          }
+        }
+      },
+      "invocations": [
+        {
+          "executionSuccessful": true
+        }
+      ],
+      "results": [
+        {
+          "ruleId": "CSDK-203",
+          "ruleIndex": 0,
+          "kind": "informational",
+          "message": {
+            "text": "A repository that builds on the Claude Agent SDK but ships no agent-guidance doc — CLAUDE.md (the Claude Code convention) or AGENTS.md (the cross-vendor one) — leaves any coding agent that opens the repo with no project-specific guidance. The conventions, build commands, test runners, lint scripts, and \"do not touch\" boundaries a human maintainer would describe in onboarding are absent, so the agent has to infer them from the source on every session and frequently guesses wrong — bypassing the project's lint, picking the wrong test command, or violating commit conventions that were never written down anywhere it could read. The cost compounds: each new contributor (human or agent) reinvents the same wrong assumptions.\n"
+          },
+          "rank": 90,
+          "partialFingerprints": {
+            "primaryLocationLineHash": "8c927f0b1b0fb63358ed8144fb13e050c197ca78e3086aa6eb128d97cc47085a"
+          },
+          "properties": {
+            "confidence": 0.9
+          }
+        },
+        {
+          "ruleId": "CSDK-208",
+          "ruleIndex": 1,
+          "kind": "informational",
+          "message": {
+            "text": "This project runs Claude Agent SDK agents but wires no observability backend. No OpenTelemetry provider and no third-party instrumentation (Langfuse, Logfire, Braintrust, Phoenix, Weave, AgentOps) appears in the parsed source. A subagent that picks the wrong tool, a permission mode that is broader than intended, or a run that silently exhausts its turns leaves no trace to inspect afterwards.\n"
+          },
+          "rank": 75,
+          "partialFingerprints": {
+            "primaryLocationLineHash": "7bd09d3d269c8f7304f5ab5326012e36b11269cc086de68fc05f0d3fe01c96c4"
+          },
+          "properties": {
+            "confidence": 0.75
+          }
+        },
+        {
+          "ruleId": "OAI-004",
+          "ruleIndex": 2,
+          "message": {
+            "text": "When a tool raises an exception, the OpenAI Agents SDK surfaces the exception's string representation to the model by default. The model receives an opaque error with no recovery contract, leading to hallucinated retries or confused responses. Setting failure_error_function lets you control what the model sees, typically a structured JSON describing the failure and what input to try instead.\n"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "agent.py",
+                  "uriBaseId": "REPO_ROOT"
+                },
+                "region": {
+                  "startLine": 10,
+                  "endLine": 12
+                }
+              },
+              "logicalLocations": [
+                {
+                  "name": "fetch",
+                  "kind": "function"
+                }
+              ]
+            }
+          ],
+          "rank": 70,
+          "partialFingerprints": {
+            "primaryLocationLineHash": "b22ed5d5a8a34cb96310479366269a8402fdf2ace2a8c2e39bfe5d609beb37c5"
+          },
+          "properties": {
+            "confidence": 0.7
+          }
+        },
+        {
+          "ruleId": "OAI-005",
+          "ruleIndex": 3,
+          "message": {
+            "text": "An OpenAI Agents SDK tool that makes a network request without a timeout can hang indefinitely, blocking the agent's run loop and consuming the conversation's wall-clock budget. The SDK does not enforce timeouts on tool code.\n"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "agent.py",
+                  "uriBaseId": "REPO_ROOT"
+                },
+                "region": {
+                  "startLine": 10,
+                  "endLine": 12
+                }
+              },
+              "logicalLocations": [
+                {
+                  "name": "fetch",
+                  "kind": "function"
+                }
+              ]
+            }
+          ],
+          "rank": 85,
+          "partialFingerprints": {
+            "primaryLocationLineHash": "ab03bac7fc7de22e01d58cdea192cc4bafb8f8f8e3fa36ab7e33969c2c16b4fc"
+          },
+          "properties": {
+            "confidence": 0.85
+          }
+        },
+        {
+          "ruleId": "OAI-018",
+          "ruleIndex": 4,
+          "message": {
+            "text": "An OpenAI Agents SDK tool builds its outbound HTTP URL from a non-literal value — typically a tool parameter interpolated into an f-string or concatenated onto a base URL. Because tool arguments are produced by the model from conversation context (including prior tool output and user input), an attacker who can shape that context can steer the request to an attacker-controlled host or to an internal address the agent's network egress can reach but the model was never meant to touch. The same channel also leaks request bodies (auth headers, JSON payloads, the model's reasoning) to whichever host the URL resolves to, so the failure mode is both SSRF and data exfiltration in one call.\n"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "agent.py",
+                  "uriBaseId": "REPO_ROOT"
+                },
+                "region": {
+                  "startLine": 10,
+                  "endLine": 12
+                }
+              },
+              "logicalLocations": [
+                {
+                  "name": "fetch",
+                  "kind": "function"
+                }
+              ]
+            }
+          ],
+          "rank": 55.00000000000001,
+          "partialFingerprints": {
+            "primaryLocationLineHash": "e92d31aa2aa4b9836170185398054f75fc2ef69216ba547262eaf145640b1736"
+          },
+          "properties": {
+            "confidence": 0.55
+          }
+        },
+        {
+          "ruleId": "OAI-026",
+          "ruleIndex": 5,
+          "message": {
+            "text": "A description under 40 characters is rarely enough to convey what a tool does, what it returns, and when to call it rather than a similarly named neighbor. The Agents SDK passes this text to the model as its only selection signal, so a stub like \"Gets data.\" leaves scope and preconditions to guesswork. The cost lands where it is hardest to see: an agent with handoffs picks between its own tools and its peers' on the strength of these strings, so a thin description does not just cause a wrong call, it can route the whole conversation to the wrong agent.\n"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "agent.py",
+                  "uriBaseId": "REPO_ROOT"
+                },
+                "region": {
+                  "startLine": 10,
+                  "endLine": 12
+                }
+              },
+              "logicalLocations": [
+                {
+                  "name": "fetch",
+                  "kind": "function"
+                }
+              ]
+            }
+          ],
+          "rank": 80,
+          "partialFingerprints": {
+            "primaryLocationLineHash": "f4134305b25f060325107a2b2b84bc5db9daa2180c253444c1eb77fd133ebbca"
+          },
+          "properties": {
+            "confidence": 0.8
+          }
+        },
+        {
+          "ruleId": "OAI-106",
+          "ruleIndex": 6,
+          "message": {
+            "text": "The agent imports tools from one or more MCP servers (mcp_servers=) but has no input_guardrails. MCP tool descriptions are advertised by the MCP server, which is a separate trust boundary; an attacker- controlled or compromised MCP server can craft tool descriptions that bait the agent into harmful actions — the \"tool poisoning\" pattern documented in the MCP threat literature. Detection only fires when mcp_servers is actually configured with at least one server (an empty list wires nothing), so agents without MCP are unaffected.\n"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "hosted_and_mcp.py",
+                  "uriBaseId": "REPO_ROOT"
+                },
+                "region": {
+                  "startLine": 4,
+                  "endLine": 8
+                }
+              },
+              "logicalLocations": [
+                {
+                  "name": "multi",
+                  "kind": "function"
+                }
+              ]
+            }
+          ],
+          "rank": 90,
+          "partialFingerprints": {
+            "primaryLocationLineHash": "d31412076341a5791acc5bfb7adaadd1e65e9a440a020e624ff845e152c66662"
+          },
+          "properties": {
+            "confidence": 0.9
+          }
+        },
+        {
+          "ruleId": "OAI-109",
+          "ruleIndex": 7,
+          "message": {
+            "text": "This agent is wired with WebSearchTool, which fetches content from the public internet, but has no input_guardrails configured. Web search results are untrusted external data that can contain prompt injection payloads. An attacker can craft malicious content on a page they control; when the agent searches and retrieves that content, the injected instructions can hijack the agent's behavior — exfiltrating data, calling other tools, or manipulating outputs.\n"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "hosted_and_mcp.py",
+                  "uriBaseId": "REPO_ROOT"
+                },
+                "region": {
+                  "startLine": 4,
+                  "endLine": 8
+                }
+              },
+              "logicalLocations": [
+                {
+                  "name": "multi",
+                  "kind": "function"
+                }
+              ]
+            }
+          ],
+          "rank": 85,
+          "partialFingerprints": {
+            "primaryLocationLineHash": "bb7dbde9bbad459a08b810090d8861d193bf0b20dbeb4fa11391c216b933dd9d"
+          },
+          "properties": {
+            "confidence": 0.85
+          }
+        },
+        {
+          "ruleId": "OAI-110",
+          "ruleIndex": 8,
+          "message": {
+            "text": "This agent pulls in untrusted external content (web search, file search, or a code interpreter) but has no output_guardrails. Input guardrails (OAI-101/106/109) screen what reaches the model; output guardrails are the SDK's mechanism to screen the final response before it reaches the user. Without them, a prompt-injected tool result can drive an exfiltrating or unsafe final answer with nothing inspecting the egress. The check is scoped to agents that actually wire a content-fetching hosted tool, since a plain agent legitimately needs no output guardrail.\n"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "hosted_and_mcp.py",
+                  "uriBaseId": "REPO_ROOT"
+                },
+                "region": {
+                  "startLine": 4,
+                  "endLine": 8
+                }
+              },
+              "logicalLocations": [
+                {
+                  "name": "multi",
+                  "kind": "function"
+                }
+              ]
+            }
+          ],
+          "rank": 60,
+          "partialFingerprints": {
+            "primaryLocationLineHash": "0738c2d3020c0567b1503e2b297396dd514549b9459073a745d06ef5b9ae359e"
+          },
+          "properties": {
+            "confidence": 0.6
+          }
+        },
+        {
+          "ruleId": "OAI-118",
+          "ruleIndex": 9,
+          "message": {
+            "text": "This agent wires an MCP server (MCPServerStdio, MCPServerSse, or MCPServerStreamableHttp) with no tool_filter. Unlike an explicit tools=[...] list, an MCP server connects the agent to every tool that server currently exposes — a surface that is not enumerable from the agent's source, can grow or change behavior whenever the server is updated, and sits on the far side of a trust boundary this codebase does not control. tool_filter (via create_static_tool_filter or a callable) is the SDK's only mechanism for narrowing that catalog to a named allow-list; when it is None (the default), no filtering occurs at all, so a poisoned or newly-added tool description reaches the model unfiltered.\n"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "hosted_and_mcp.py",
+                  "uriBaseId": "REPO_ROOT"
+                },
+                "region": {
+                  "startLine": 4,
+                  "endLine": 8
+                }
+              },
+              "logicalLocations": [
+                {
+                  "name": "multi",
+                  "kind": "function"
+                }
+              ]
+            }
+          ],
+          "rank": 75,
+          "partialFingerprints": {
+            "primaryLocationLineHash": "2e6b2014284e0553a9ad18a0b6e1f1527a4c1de5940aff560d49dd3f183f9a3f"
+          },
+          "properties": {
+            "confidence": 0.75
+          }
+        },
+        {
+          "ruleId": "OAI-201",
+          "ruleIndex": 10,
+          "kind": "informational",
+          "message": {
+            "text": "The project uses the OpenAI Agents SDK with default tracing enabled. By default, inputs, tool calls, tool outputs, and agent responses are sent to OpenAI's hosted tracing backend. For projects handling sensitive data (PII, credentials, internal documents), this is a data egress channel that is easy to miss.\n"
+          },
+          "rank": 80,
+          "partialFingerprints": {
+            "primaryLocationLineHash": "909f2973bbb976bb4bca098a37428ad29f25c0b2587171b86430a13f1367e5d4"
+          },
+          "properties": {
+            "confidence": 0.8
+          }
+        },
+        {
+          "ruleId": "OAI-202",
+          "ruleIndex": 11,
+          "kind": "informational",
+          "message": {
+            "text": "The project uses the OpenAI Agents SDK in code but ships no agent-guidance doc (AGENTS.md or CLAUDE.md) at the repo root. AGENTS.md is the cross-vendor convention an editing coding agent reads before it acts; with neither file present, any agent that opens this repo has no project-specific guidance on Agent vs SandboxAgent choice, handoff topology, required input/output guardrails, tool_choice settings, or the local test and build commands. The likely consequence is generated code that bypasses the project's safety contracts because nothing in-tree teaches the agent the local rules.\n"
+          },
+          "rank": 90,
+          "partialFingerprints": {
+            "primaryLocationLineHash": "26a8e7422c51ce85da5436d8ee503243e0a68a42e73ccb4ac96ab9be0ea776e1"
+          },
+          "properties": {
+            "confidence": 0.9
+          }
+        },
+        {
+          "ruleId": "OAI-203",
+          "ruleIndex": 12,
+          "kind": "informational",
+          "message": {
+            "text": "This project runs OpenAI Agents SDK agents but wires no observability backend: no OpenTelemetry provider, no Langfuse, Logfire, Phoenix, Braintrust, Weave, or AgentOps instrumentation appears anywhere in the parsed source. When an agent misbehaves in production — a tool loop, a silent guardrail trip, a cost spike — there is no trace to read, so the only evidence is whatever the application happened to log. Agent runs are non-deterministic, which makes after-the-fact reconstruction from logs alone unreliable.\n"
+          },
+          "rank": 75,
+          "partialFingerprints": {
+            "primaryLocationLineHash": "82c259a97c44534dcd2d803eb4dd13866c202b9dc4d63d6838b5fb0aa35c7674"
+          },
+          "properties": {
+            "confidence": 0.75
+          }
+        }
+      ],
+      "automationDetails": {
+        "id": "scan_f6aba8e83f42a9fa"
+      },
+      "originalUriBaseIds": {
+        "REPO_ROOT": {
+          "uri": "file:///tmp/trustabl-fixtures/acme-support/"
+        }
+      }
+    }
+  ]
+}

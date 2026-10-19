@@ -1,0 +1,3 @@
+outdated: generated from 0123456, current rules are f57df3f
+regenerate: trustabl forge --output /tmp/stale.md
+  (pass any --policy or --lang flags used originally)

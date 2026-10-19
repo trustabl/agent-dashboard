@@ -1,0 +1,99 @@
+{
+  "schema_version": "1",
+  "generated_at": "2026-10-19T03:27:39Z",
+  "class": "research-tools",
+  "source": "/tmp/probe-research/out",
+  "findings": [
+    {
+      "file": "/tmp/trustabl-fixtures/research-tools/refund-tool/tool.py",
+      "title": "Prompt injection risk — unfiltered external content returned to agent",
+      "description": "The tool returns raw content fetched from external sources directly to the agent. A compromised or malicious server can embed instructions like 'Ignore previous instructions' in its response, hijacking the agent's behavior.",
+      "severity": "critical",
+      "score_impact": -25,
+      "evidence": [
+        {
+          "label": "Unfiltered external content",
+          "detail": "'refund_charge' returns raw HTTP response content on line 22 — a malicious server response could inject instructions into the agent",
+          "raw_line": "return resp.json()",
+          "source": "static_analysis"
+        }
+      ],
+      "fix_hint": "Extract only the specific data fields you need instead of returning raw response bodies. If you must return free-form text, sanitize it first by stripping HTML tags and wrapping the content with a clear boundary marker so the agent treats it as data, not instructions. Example:\nreturn f'[TOOL RESULT]\\n{extract_text(resp.text)[:2000]}\\n[END TOOL RESULT]'"
+    },
+    {
+      "file": "/tmp/trustabl-fixtures/research-tools/refund-tool/tool.py",
+      "title": "Sandbox execution skipped — tool appears to perform an irreversible operation",
+      "description": "This tool's code contains a call shape with a real-world side effect (a network write, subprocess call, filesystem delete, or destructive SQL). By default Probe does not execute such tools inside the sandbox, since an allowed destination could otherwise really be charged, deleted, or modified during a scan.",
+      "severity": "warning",
+      "score_impact": -10,
+      "evidence": [
+        {
+          "label": "Mutating operation",
+          "detail": "Line 16 performs an operation with a real-world side effect",
+          "raw_line": "resp = requests.post(",
+          "source": "static_analysis"
+        }
+      ],
+      "fix_hint": "Pass --allow-write-tools to run this tool for real inside the sandbox — ideally combined with --env-fixtures pointing at staging/test-mode credentials so the tool's real call lands on a non-production endpoint rather than prod."
+    },
+    {
+      "file": "/tmp/trustabl-fixtures/research-tools/research-assistant/tool.py",
+      "title": "No error handling — tool crashes agent",
+      "description": "The tool raises unhandled exceptions that would terminate the entire agent run without recovery.",
+      "severity": "critical",
+      "score_impact": -25,
+      "evidence": [
+        {
+          "label": "Agent crash",
+          "detail": "Tool raised an unhandled exception that would crash the agent run.",
+          "raw_line": "Traceback (most recent call last):",
+          "source": "tool_output"
+        },
+        {
+          "label": "Agent crash",
+          "detail": "Error: name 'API_KEY' is not defined",
+          "raw_line": "NameError: name 'API_KEY' is not defined",
+          "source": "tool_output"
+        }
+      ],
+      "fix_hint": "Wrap the body of the function that makes external calls in a try/except block. Catch Exception as e and return a safe error string instead of raising. Example: def my_tool(arg):\n    try:\n        # existing body here\n        return result\n    except Exception as e:\n        return f'Tool error: {e}'\nDo NOT change the function signature, imports, or any other part of the file."
+    },
+    {
+      "file": "/tmp/trustabl-fixtures/research-tools/research-assistant/tool.py",
+      "title": "Unbounded tool output — can overflow agent context window",
+      "description": "The tool returns full HTTP response bodies or file contents without a size cap. Large responses consume the agent's entire context window, causing failures and spiking inference costs.",
+      "severity": "warning",
+      "score_impact": -15,
+      "evidence": [
+        {
+          "label": "Unbounded output",
+          "detail": "Line 30 returns a full response body or file read with no size limit — could push megabytes into agent context",
+          "raw_line": "return completion.choices[0].message.content",
+          "source": "static_analysis"
+        }
+      ],
+      "fix_hint": "Add a maximum character limit before returning to the agent. Example:\nMAX_OUTPUT = 4096\ntext = resp.text[:MAX_OUTPUT]\nif len(resp.text) \u003e MAX_OUTPUT:\n    text += '\\n...[truncated]'\nreturn text\nChoose a limit appropriate to your agent's context window (2000–8000 chars is typical for a tool response)."
+    },
+    {
+      "title": "Class union grants some tools network access they don't individually need",
+      "description": "This class's generated policy is the union of every tool's observed egress. Because all tools in a class share one jail, a tool can now reach destinations that only a different tool in the class actually needed — not silently merged without visibility, per the product's least-privilege design.",
+      "severity": "warning",
+      "score_impact": -10,
+      "evidence": [
+        {
+          "label": "Non-universal destination",
+          "detail": "api.perplexity.ai is needed by 1/2 tools (/tmp/trustabl-fixtures/research-tools/research-assistant/tool.py) — the rest gain reachability to it only because they share this class's jail",
+          "raw_line": "",
+          "source": "class_split"
+        },
+        {
+          "label": "Non-universal destination",
+          "detail": "api.stripe.com is needed by 1/2 tools (/tmp/trustabl-fixtures/research-tools/refund-tool/tool.py) — the rest gain reachability to it only because they share this class's jail",
+          "raw_line": "",
+          "source": "class_split"
+        }
+      ],
+      "fix_hint": "If this is intentional (the tools are meant to share this jail), no action needed. If not, consider splitting this class into separate classes/jails so each tool's policy stays scoped to what it actually needs."
+    }
+  ]
+}

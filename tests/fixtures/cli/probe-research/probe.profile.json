@@ -1,0 +1,42 @@
+{
+  "schema_version": "1",
+  "generated_at": "2026-10-19T03:27:39Z",
+  "class": "research-tools",
+  "source": "/tmp/probe-research/out",
+  "grant_set": [
+    "/tmp/trustabl-fixtures/research-tools/refund-tool/tool.py",
+    "/tmp/trustabl-fixtures/research-tools/research-assistant/tool.py"
+  ],
+  "grant_set_hash": "47fd7b024315c9dc0911b7e21b99ff314e75bd6e8ce9be5d244301463db5923a",
+  "tools": [
+    {
+      "path": "/tmp/trustabl-fixtures/research-tools/refund-tool/tool.py",
+      "language": "python",
+      "cache_hit": false,
+      "egress": [
+        {
+          "host": "api.stripe.com",
+          "port": 443,
+          "protocol": "tcp",
+          "source": "declared"
+        }
+      ],
+      "findings_count": 2
+    },
+    {
+      "path": "/tmp/trustabl-fixtures/research-tools/research-assistant/tool.py",
+      "language": "python",
+      "harness_id": "autofix-1792379722665",
+      "cache_hit": true,
+      "egress": [
+        {
+          "host": "api.perplexity.ai",
+          "port": 443,
+          "protocol": "tcp",
+          "source": "declared"
+        }
+      ],
+      "findings_count": 2
+    }
+  ]
+}

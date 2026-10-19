@@ -1,0 +1,557 @@
+{
+  "scan_id": "scan_f6aba8e83f42a9fa",
+  "repo": "/tmp/trustabl-fixtures/acme-support",
+  "languages": [
+    "python"
+  ],
+  "sdks": [
+    "claude_agent_sdk",
+    "openai_agents"
+  ],
+  "has_shell_invocations": false,
+  "manifest": {
+    "repo_root": "/tmp/trustabl-fixtures/acme-support",
+    "is_remote": false,
+    "python_files": [
+      "agent.py",
+      "hosted_and_mcp.py"
+    ],
+    "yaml_files": [],
+    "json_files": [
+      ".claude/settings.json"
+    ],
+    "markdown_files": [
+      ".claude/agents/det.md"
+    ],
+    "has_claude_sdk_dependency": false,
+    "has_openshell_artifact": false,
+    "components": [
+      {
+        "kind": "claude_settings",
+        "path": ".claude/settings.json"
+      },
+      {
+        "kind": "dependency_manifest",
+        "path": "pyproject.toml",
+        "language": "python"
+      },
+      {
+        "kind": "subagent",
+        "path": ".claude/agents/det.md"
+      }
+    ]
+  },
+  "tools": [
+    {
+      "name": "fetch",
+      "kind": "openai_tool",
+      "language": "python",
+      "file_path": "agent.py",
+      "start_line": 10,
+      "end_line": 12,
+      "description": "Fetch a URL.",
+      "has_typed_params": true,
+      "param_names": [
+        "url"
+      ]
+    }
+  ],
+  "agents": [
+    {
+      "sdk": "openai_agents",
+      "class": "Agent",
+      "language": "python",
+      "file_path": "agent.py",
+      "start_line": 14,
+      "end_line": 14,
+      "name": "fixture",
+      "kwargs": {
+        "children": {
+          "name": {
+            "value": {
+              "kind": "literal_string",
+              "text": "\"fixture\""
+            }
+          },
+          "tools": {
+            "value": {
+              "kind": "list",
+              "text": "[fetch]",
+              "list": [
+                {
+                  "kind": "name_ref",
+                  "text": "fetch"
+                }
+              ]
+            }
+          }
+        }
+      },
+      "tool_refs": [
+        {
+          "name": "fetch",
+          "external": false
+        }
+      ],
+      "hosted_tool_refs": null,
+      "mcp_server_refs": null,
+      "handoff_refs": null,
+      "input_guards": null,
+      "output_guards": null,
+      "opaque": false
+    },
+    {
+      "sdk": "openai_agents",
+      "class": "Agent",
+      "language": "python",
+      "file_path": "hosted_and_mcp.py",
+      "start_line": 4,
+      "end_line": 8,
+      "name": "multi",
+      "kwargs": {
+        "children": {
+          "mcp_servers": {
+            "value": {
+              "kind": "list",
+              "text": "[MCPServerStdio(params={\"command\": \"npx\", \"args\": [\"-y\", \"@modelcontextprotocol/server-filesystem\"]})]",
+              "list": [
+                {
+                  "kind": "call",
+                  "text": "MCPServerStdio(params={\"command\": \"npx\", \"args\": [\"-y\", \"@modelcontextprotocol/server-filesystem\"]})"
+                }
+              ]
+            }
+          },
+          "name": {
+            "value": {
+              "kind": "literal_string",
+              "text": "\"multi\""
+            }
+          },
+          "tools": {
+            "value": {
+              "kind": "list",
+              "text": "[WebSearchTool(), FileSearchTool(vector_store_ids=[\"v1\"])]",
+              "list": [
+                {
+                  "kind": "call",
+                  "text": "WebSearchTool()"
+                },
+                {
+                  "kind": "call",
+                  "text": "FileSearchTool(vector_store_ids=[\"v1\"])"
+                }
+              ]
+            }
+          }
+        }
+      },
+      "tool_refs": null,
+      "hosted_tool_refs": [
+        {
+          "class": "WebSearchTool"
+        },
+        {
+          "class": "FileSearchTool"
+        }
+      ],
+      "mcp_server_refs": [
+        {
+          "class": "MCPServerStdio",
+          "external": false
+        }
+      ],
+      "handoff_refs": null,
+      "input_guards": null,
+      "output_guards": null,
+      "opaque": false
+    }
+  ],
+  "hosted_tools": [
+    {
+      "class": "FileSearchTool",
+      "sdk": "openai_agents",
+      "file_path": "hosted_and_mcp.py",
+      "start_line": 6,
+      "end_line": 6,
+      "kwargs": {
+        "children": {
+          "vector_store_ids": {
+            "value": {
+              "kind": "list",
+              "text": "[\"v1\"]",
+              "list": [
+                {
+                  "kind": "literal_string",
+                  "text": "\"v1\""
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "class": "WebSearchTool",
+      "sdk": "openai_agents",
+      "file_path": "hosted_and_mcp.py",
+      "start_line": 6,
+      "end_line": 6
+    }
+  ],
+  "mcp_servers": [
+    {
+      "class": "MCPServerStdio",
+      "transport": "stdio",
+      "sdk": "openai_agents",
+      "language": "python",
+      "file_path": "hosted_and_mcp.py",
+      "start_line": 7,
+      "end_line": 7,
+      "kwargs": {
+        "children": {
+          "params": {
+            "value": {
+              "kind": "unknown",
+              "text": "{\"command\": \"npx\", \"args\": [\"-y\", \"@modelcontextprotocol/server-filesystem\"]}"
+            },
+            "children": {
+              "args": {
+                "value": {
+                  "kind": "list",
+                  "text": "[\"-y\", \"@modelcontextprotocol/server-filesystem\"]",
+                  "list": [
+                    {
+                      "kind": "literal_string",
+                      "text": "\"-y\""
+                    },
+                    {
+                      "kind": "literal_string",
+                      "text": "\"@modelcontextprotocol/server-filesystem\""
+                    }
+                  ]
+                }
+              },
+              "command": {
+                "value": {
+                  "kind": "literal_string",
+                  "text": "\"npx\""
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  ],
+  "subagents": [
+    {
+      "name": "det",
+      "description": "Deterministic-fixture subagent.",
+      "tools": [
+        "Read",
+        "Glob"
+      ],
+      "tool_grants": [
+        {
+          "tool": "Read",
+          "raw": "Read"
+        },
+        {
+          "tool": "Glob",
+          "raw": "Glob"
+        }
+      ],
+      "file_path": ".claude/agents/det.md",
+      "start_line": 1,
+      "end_line": 5
+    }
+  ],
+  "skills": null,
+  "dependencies": [
+    {
+      "name": "openai-agents",
+      "version": "\u003e=0.0.1",
+      "ecosystem": "pypi",
+      "source": "pyproject.toml",
+      "start_line": 4,
+      "end_line": 4
+    }
+  ],
+  "slash_commands": null,
+  "plugin_manifests": null,
+  "claude_settings": [
+    {
+      "file_path": ".claude/settings.json",
+      "start_line": 1,
+      "end_line": 7,
+      "permissions": {
+        "allow": [
+          {
+            "tool": "Bash",
+            "pattern": "go test ./...",
+            "raw": "Bash(go test ./...)",
+            "line": 3
+          }
+        ],
+        "deny": [
+          {
+            "tool": "WebFetch",
+            "raw": "WebFetch",
+            "line": 4
+          }
+        ]
+      },
+      "default_mode": "default",
+      "has_env_block": false,
+      "has_hooks": false,
+      "has_sandbox_block": false
+    }
+  ],
+  "findings": [
+    {
+      "rule_id": "CSDK-203",
+      "category": "claude_sdk",
+      "scope": "repo",
+      "severity": "low",
+      "tool_name": "",
+      "file_path": "",
+      "start_line": 0,
+      "end_line": 0,
+      "title": "Repo ships Claude Agent SDK code without an agent-guidance doc (AGENTS.md/CLAUDE.md)",
+      "explanation": "A repository that builds on the Claude Agent SDK but ships no agent-guidance doc — CLAUDE.md (the Claude Code convention) or AGENTS.md (the cross-vendor one) — leaves any coding agent that opens the repo with no project-specific guidance. The conventions, build commands, test runners, lint scripts, and \"do not touch\" boundaries a human maintainer would describe in onboarding are absent, so the agent has to infer them from the source on every session and frequently guesses wrong — bypassing the project's lint, picking the wrong test command, or violating commit conventions that were never written down anywhere it could read. The cost compounds: each new contributor (human or agent) reinvents the same wrong assumptions.\n",
+      "suggested_fix": "Add a CLAUDE.md (or an AGENTS.md) at the repository root documenting how to build, test, and lint the project, the coding conventions the agent must respect, the directories or files it must not modify, and any project-specific safety guardrails (e.g. \"never run migrations\", \"never push to main\"). Treat it as the project's agent-facing README and keep it under version control so reviewers see drift.\n",
+      "confidence": 0.9
+    },
+    {
+      "rule_id": "CSDK-208",
+      "category": "claude_sdk",
+      "scope": "repo",
+      "severity": "low",
+      "tool_name": "",
+      "file_path": "",
+      "start_line": 0,
+      "end_line": 0,
+      "title": "Claude Agent SDK project wires no observability",
+      "explanation": "This project runs Claude Agent SDK agents but wires no observability backend. No OpenTelemetry provider and no third-party instrumentation (Langfuse, Logfire, Braintrust, Phoenix, Weave, AgentOps) appears in the parsed source. A subagent that picks the wrong tool, a permission mode that is broader than intended, or a run that silently exhausts its turns leaves no trace to inspect afterwards.\n",
+      "suggested_fix": "Install an OpenTelemetry tracer provider at process start (opentelemetry.trace.set_tracer_provider(...)) with an OTLP exporter pointed at your collector, or initialize a vendor SDK — logfire.configure(), Langfuse's CallbackHandler, or braintrust.init_logger() — before the first query() call.\n",
+      "confidence": 0.75
+    },
+    {
+      "rule_id": "OAI-004",
+      "category": "openai_sdk",
+      "scope": "tool",
+      "severity": "low",
+      "tool_name": "fetch",
+      "file_path": "agent.py",
+      "start_line": 10,
+      "end_line": 12,
+      "title": "Tool has no failure_error_function",
+      "explanation": "When a tool raises an exception, the OpenAI Agents SDK surfaces the exception's string representation to the model by default. The model receives an opaque error with no recovery contract, leading to hallucinated retries or confused responses. Setting failure_error_function lets you control what the model sees, typically a structured JSON describing the failure and what input to try instead.\n",
+      "suggested_fix": "Pass failure_error_function= to the decorator. The function should receive the exception and the run context, and return a structured string the model can reason about.\n",
+      "confidence": 0.7
+    },
+    {
+      "rule_id": "OAI-005",
+      "category": "openai_sdk",
+      "scope": "tool",
+      "severity": "high",
+      "tool_name": "fetch",
+      "file_path": "agent.py",
+      "start_line": 10,
+      "end_line": 12,
+      "title": "Network call has no timeout",
+      "explanation": "An OpenAI Agents SDK tool that makes a network request without a timeout can hang indefinitely, blocking the agent's run loop and consuming the conversation's wall-clock budget. The SDK does not enforce timeouts on tool code.\n",
+      "suggested_fix": "Pass timeout= (typically 5-30 seconds depending on the endpoint). Surface timeouts as a structured tool error the model can react to, using failure_error_function (see OAI-004).\n",
+      "confidence": 0.85
+    },
+    {
+      "rule_id": "OAI-018",
+      "category": "openai_sdk",
+      "scope": "tool",
+      "severity": "medium",
+      "tool_name": "fetch",
+      "file_path": "agent.py",
+      "start_line": 10,
+      "end_line": 12,
+      "title": "Tool builds outbound URL from non-literal value",
+      "explanation": "An OpenAI Agents SDK tool builds its outbound HTTP URL from a non-literal value — typically a tool parameter interpolated into an f-string or concatenated onto a base URL. Because tool arguments are produced by the model from conversation context (including prior tool output and user input), an attacker who can shape that context can steer the request to an attacker-controlled host or to an internal address the agent's network egress can reach but the model was never meant to touch. The same channel also leaks request bodies (auth headers, JSON payloads, the model's reasoning) to whichever host the URL resolves to, so the failure mode is both SSRF and data exfiltration in one call.\n",
+      "suggested_fix": "Treat the model-supplied value as untrusted input to URL construction. Validate it against an allow-list of permitted hosts/path segments before any HTTP client touches it, or look the value up against a server-side registry and build the URL from the registry's trusted entry. If the value is meant to be an opaque ID (e.g. a connection_id), pass it as a query parameter or path segment of a fixed base URL and reject characters that would let it escape that slot. Credit is given when the body checks the parsed hostname against a named allow-list; also require https:// and cap or disable redirects (follow_redirects=False / allow_redirects=False).\n",
+      "confidence": 0.55
+    },
+    {
+      "rule_id": "OAI-026",
+      "category": "openai_sdk",
+      "scope": "tool",
+      "severity": "low",
+      "tool_name": "fetch",
+      "file_path": "agent.py",
+      "start_line": 10,
+      "end_line": 12,
+      "title": "Tool description is too short to guide model selection",
+      "explanation": "A description under 40 characters is rarely enough to convey what a tool does, what it returns, and when to call it rather than a similarly named neighbor. The Agents SDK passes this text to the model as its only selection signal, so a stub like \"Gets data.\" leaves scope and preconditions to guesswork. The cost lands where it is hardest to see: an agent with handoffs picks between its own tools and its peers' on the strength of these strings, so a thin description does not just cause a wrong call, it can route the whole conversation to the wrong agent.\n",
+      "suggested_fix": "Expand the description to at least a full sentence covering inputs, outputs, and the situation in which this tool should be used over the alternatives. Where two tools are easy to confuse, say in each which one the other case belongs to.\n",
+      "confidence": 0.8
+    },
+    {
+      "rule_id": "OAI-106",
+      "category": "openai_sdk",
+      "scope": "agent",
+      "severity": "high",
+      "tool_name": "multi",
+      "file_path": "hosted_and_mcp.py",
+      "start_line": 4,
+      "end_line": 8,
+      "title": "Agent wires MCP servers without input_guardrails",
+      "explanation": "The agent imports tools from one or more MCP servers (mcp_servers=) but has no input_guardrails. MCP tool descriptions are advertised by the MCP server, which is a separate trust boundary; an attacker- controlled or compromised MCP server can craft tool descriptions that bait the agent into harmful actions — the \"tool poisoning\" pattern documented in the MCP threat literature. Detection only fires when mcp_servers is actually configured with at least one server (an empty list wires nothing), so agents without MCP are unaffected.\n",
+      "suggested_fix": "Add at least one @input_guardrail that inspects the user's input AND the resolved tool list before the model is invoked. Pin MCP servers to known-trusted URLs/checksums and document the trust assumption.\n",
+      "confidence": 0.9
+    },
+    {
+      "rule_id": "OAI-109",
+      "category": "openai_sdk",
+      "scope": "agent",
+      "severity": "high",
+      "tool_name": "multi",
+      "file_path": "hosted_and_mcp.py",
+      "start_line": 4,
+      "end_line": 8,
+      "title": "Agent uses WebSearchTool without input_guardrails",
+      "explanation": "This agent is wired with WebSearchTool, which fetches content from the public internet, but has no input_guardrails configured. Web search results are untrusted external data that can contain prompt injection payloads. An attacker can craft malicious content on a page they control; when the agent searches and retrieves that content, the injected instructions can hijack the agent's behavior — exfiltrating data, calling other tools, or manipulating outputs.\n",
+      "suggested_fix": "Add at least one @input_guardrail that validates user queries before they reach WebSearchTool. The guardrail should reject queries that could lead to attacker-controlled content (e.g. queries containing raw URLs or suspicious redirection patterns). Wire it via input_guardrails=[...] on the Agent(...) constructor.\n",
+      "confidence": 0.85
+    },
+    {
+      "rule_id": "OAI-110",
+      "category": "openai_sdk",
+      "scope": "agent",
+      "severity": "medium",
+      "tool_name": "multi",
+      "file_path": "hosted_and_mcp.py",
+      "start_line": 4,
+      "end_line": 8,
+      "title": "Agent wires a content-fetching tool without output_guardrails",
+      "explanation": "This agent pulls in untrusted external content (web search, file search, or a code interpreter) but has no output_guardrails. Input guardrails (OAI-101/106/109) screen what reaches the model; output guardrails are the SDK's mechanism to screen the final response before it reaches the user. Without them, a prompt-injected tool result can drive an exfiltrating or unsafe final answer with nothing inspecting the egress. The check is scoped to agents that actually wire a content-fetching hosted tool, since a plain agent legitimately needs no output guardrail.\n",
+      "suggested_fix": "Add at least one output guardrail (a function decorated @output_guardrail or an OutputGuardrail instance) and wire it via output_guardrails=[...] on the Agent(...) constructor. It should inspect the final output for data exfiltration and unsafe content before it is returned.\n",
+      "confidence": 0.6
+    },
+    {
+      "rule_id": "OAI-118",
+      "category": "openai_sdk",
+      "scope": "agent",
+      "severity": "high",
+      "tool_name": "multi",
+      "file_path": "hosted_and_mcp.py",
+      "start_line": 4,
+      "end_line": 8,
+      "title": "Agent wires an MCP server with no tool_filter allow-list",
+      "explanation": "This agent wires an MCP server (MCPServerStdio, MCPServerSse, or MCPServerStreamableHttp) with no tool_filter. Unlike an explicit tools=[...] list, an MCP server connects the agent to every tool that server currently exposes — a surface that is not enumerable from the agent's source, can grow or change behavior whenever the server is updated, and sits on the far side of a trust boundary this codebase does not control. tool_filter (via create_static_tool_filter or a callable) is the SDK's only mechanism for narrowing that catalog to a named allow-list; when it is None (the default), no filtering occurs at all, so a poisoned or newly-added tool description reaches the model unfiltered.\n",
+      "suggested_fix": "Pass tool_filter=create_static_tool_filter(allowed_tool_names=[...]) to the MCP server constructor, naming the specific tool names this agent is allowed to call, e.g. MCPServerStdio(params=..., tool_filter= create_static_tool_filter(allowed_tool_names=[\"read_file\", \"list_directory\"])). Re-review the filter whenever the agent's task changes, and treat any server tool not in the list as excluded by default.\n",
+      "confidence": 0.75
+    },
+    {
+      "rule_id": "OAI-201",
+      "category": "openai_sdk",
+      "scope": "repo",
+      "severity": "medium",
+      "tool_name": "",
+      "file_path": "",
+      "start_line": 0,
+      "end_line": 0,
+      "title": "Project uses default OpenAI tracing",
+      "explanation": "The project uses the OpenAI Agents SDK with default tracing enabled. By default, inputs, tool calls, tool outputs, and agent responses are sent to OpenAI's hosted tracing backend. For projects handling sensitive data (PII, credentials, internal documents), this is a data egress channel that is easy to miss.\n",
+      "suggested_fix": "Either disable tracing entirely (set OPENAI_AGENTS_DISABLE_TRACING=1 in the environment) OR register a custom trace processor via agents.tracing.add_trace_processor(...) that redacts sensitive fields before they leave the process.\n",
+      "confidence": 0.8
+    },
+    {
+      "rule_id": "OAI-202",
+      "category": "openai_sdk",
+      "scope": "repo",
+      "severity": "low",
+      "tool_name": "",
+      "file_path": "",
+      "start_line": 0,
+      "end_line": 0,
+      "title": "OpenAI Agents project ships no agent-guidance doc (AGENTS.md/CLAUDE.md)",
+      "explanation": "The project uses the OpenAI Agents SDK in code but ships no agent-guidance doc (AGENTS.md or CLAUDE.md) at the repo root. AGENTS.md is the cross-vendor convention an editing coding agent reads before it acts; with neither file present, any agent that opens this repo has no project-specific guidance on Agent vs SandboxAgent choice, handoff topology, required input/output guardrails, tool_choice settings, or the local test and build commands. The likely consequence is generated code that bypasses the project's safety contracts because nothing in-tree teaches the agent the local rules.\n",
+      "suggested_fix": "Add an AGENTS.md at the repo root (the cross-vendor standard; a CLAUDE.md also satisfies this rule). State whether the project uses Agent or SandboxAgent, list required guardrails (input_guardrails, output_guardrails) and tool_choice conventions, note any handoff or tracing policy, and give the exact test, lint, and build commands. Keep it short and concrete so an editing agent can act on it without re-deriving the conventions.\n",
+      "confidence": 0.9
+    },
+    {
+      "rule_id": "OAI-203",
+      "category": "openai_sdk",
+      "scope": "repo",
+      "severity": "low",
+      "tool_name": "",
+      "file_path": "",
+      "start_line": 0,
+      "end_line": 0,
+      "title": "OpenAI Agents SDK project wires no observability",
+      "explanation": "This project runs OpenAI Agents SDK agents but wires no observability backend: no OpenTelemetry provider, no Langfuse, Logfire, Phoenix, Braintrust, Weave, or AgentOps instrumentation appears anywhere in the parsed source. When an agent misbehaves in production — a tool loop, a silent guardrail trip, a cost spike — there is no trace to read, so the only evidence is whatever the application happened to log. Agent runs are non-deterministic, which makes after-the-fact reconstruction from logs alone unreliable.\n",
+      "suggested_fix": "Wire a trace backend. The SDK traces natively: register a processor with agents.tracing.add_trace_processor(...) to ship spans to your collector, or install an OpenTelemetry provider (opentelemetry.trace.set_tracer_provider(...)) with an OTLP exporter. If you already run a vendor — Langfuse, Logfire, Braintrust, Phoenix — initialize its SDK at process start.\n",
+      "confidence": 0.75
+    }
+  ],
+  "surfaces": [
+    {
+      "kind": "agent",
+      "name": "multi",
+      "file_path": "hosted_and_mcp.py",
+      "score": 0.33666666666666667,
+      "finding_count": 4,
+      "weighted_severity": 1.99
+    },
+    {
+      "kind": "tool",
+      "name": "fetch",
+      "file_path": "agent.py",
+      "score": 0.6533333333333333,
+      "finding_count": 4,
+      "weighted_severity": 1.04
+    },
+    {
+      "kind": "repo",
+      "name": "",
+      "file_path": "",
+      "score": 0.7283333333333333,
+      "finding_count": 5,
+      "weighted_severity": 0.8150000000000002
+    },
+    {
+      "kind": "agent",
+      "name": "fixture",
+      "file_path": "agent.py",
+      "score": 1,
+      "finding_count": 0,
+      "weighted_severity": 0
+    },
+    {
+      "kind": "subagent",
+      "name": "det",
+      "file_path": ".claude/agents/det.md",
+      "score": 1,
+      "finding_count": 0,
+      "weighted_severity": 0
+    }
+  ],
+  "overall_score": 0.6400631241756171,
+  "projected_scores": {
+    "fix_critical": 0.6400631241756171,
+    "fix_high": 0.8759051282051282,
+    "fix_medium": 0.9408129370629371,
+    "fix_low": 1,
+    "fix_all": 1
+  },
+  "rules_source": "https://github.com/trustabl/agent-reliability-rules",
+  "rules_version": "ff6ff960fa3d868feb400d6f12bd7413bc6335ee5751edee1b29a76e47533367",
+  "rules_from_cache": false,
+  "rules_schema_version": 23,
+  "rules_origin": {
+    "signed": true,
+    "channel": "production"
+  },
+  "coverage": {
+    "files_parsed": 2,
+    "files_skipped": 0
+  }
+}

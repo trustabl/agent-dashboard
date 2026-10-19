@@ -1,0 +1,46 @@
+{
+  "schema_version": "1",
+  "generated_at": "2026-10-19T03:27:39Z",
+  "source": "/tmp/probe-research/out",
+  "entrypoints": [
+    "/tmp/trustabl-fixtures/research-tools/refund-tool/tool.py",
+    "/tmp/trustabl-fixtures/research-tools/research-assistant/tool.py"
+  ],
+  "languages_detected": [
+    "python"
+  ],
+  "network_calls": [
+    {
+      "host": "api.stripe.com",
+      "port": 443,
+      "protocol": "tcp",
+      "source": "declared"
+    },
+    {
+      "host": "api.perplexity.ai",
+      "port": 443,
+      "protocol": "tcp",
+      "source": "declared"
+    }
+  ],
+  "file_access_patterns": {
+    "read_only": [
+      "/usr",
+      "/lib",
+      "/etc"
+    ],
+    "read_write": [
+      "/sandbox",
+      "/tmp"
+    ]
+  },
+  "findings_summary": {
+    "total": 5,
+    "critical": 2,
+    "warning": 3,
+    "info": 0
+  },
+  "production_readiness_score": 15,
+  "source_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "sha256": "952eb1f28bb24f9c02da46804daf4ca12198947948cb94f3f4f45b974560c1f9"
+}
