@@ -61,7 +61,7 @@ node scripts/fetch-tools.mjs
 SRC_SUM="$(node scripts/source-sum.mjs)"
 if [ ! -f .next/BUILD_ID ] || [ ! -f .next/.src-sum ] || [ "$(cat .next/.src-sum)" != "$SRC_SUM" ]; then
   say "Building"
-  NEXT_TELEMETRY_DISABLED=1 npx next build
+  NEXT_TELEMETRY_DISABLED=1 NODE_OPTIONS="${NODE_OPTIONS:-} --disable-warning=ExperimentalWarning" npx next build
   echo "$SRC_SUM" > .next/.src-sum
 fi
 

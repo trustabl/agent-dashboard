@@ -3,7 +3,7 @@ import { createHash } from 'node:crypto'
 import fs from 'node:fs'
 import path from 'node:path'
 
-const roots = ['src', 'package-lock.json', 'next.config.ts', 'tailwind.config.ts', 'postcss.config.mjs', 'tools.lock.json', 'tsconfig.json']
+const roots = ['src', 'package-lock.json', 'next.config.ts', 'tailwind.config.mts', 'postcss.config.mjs', 'tools.lock.json', 'tsconfig.json']
 const h = createHash('sha256')
 function walk(p) {
   if (!fs.existsSync(p)) return

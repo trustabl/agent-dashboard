@@ -4,7 +4,7 @@ import path from 'node:path'
 // Artifact parity (tests/parity): real CLI runs, so long timeouts and one file at a time.
 export default defineConfig({
   resolve: {
-    alias: { '@': path.resolve(__dirname, 'src') },
+    alias: { '@': path.resolve(import.meta.dirname, 'src') },
   },
   test: {
     globals: true,

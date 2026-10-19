@@ -17,7 +17,7 @@ e2e:            ## Playwright end-to-end tests against the fixture repos
 	@npx playwright test
 
 parity:         ## Artifact parity: Console run == CLI run for scan / forge / probe (Probe needs Docker)
-	@npx vitest run --config vitest.parity.config.ts
+	@npx vitest run --config vitest.parity.config.mts
 
 secrets:        ## Secret scan of the working tree and history (gitleaks; CI runs the same)
 	@gitleaks detect --source . --redact --config .gitleaks.toml
