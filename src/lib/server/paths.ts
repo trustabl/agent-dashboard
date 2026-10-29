@@ -4,11 +4,11 @@ import fs from 'node:fs'
 
 /**
  * Every byte of Console state lives under one directory so it can be wiped
- * with one command (`make wipe`). Override with TRUSTABL_CONSOLE_HOME.
+ * with one command (`make wipe`). Override with AGENT_DASHBOARD_HOME.
  */
 export function consoleHome(): string {
-  const fromEnv = process.env.TRUSTABL_CONSOLE_HOME
-  const dir = fromEnv && fromEnv.trim() !== '' ? fromEnv : path.join(os.homedir(), '.trustabl-console')
+  const fromEnv = process.env.AGENT_DASHBOARD_HOME
+  const dir = fromEnv && fromEnv.trim() !== '' ? fromEnv : path.join(os.homedir(), '.agent-dashboard')
   return path.resolve(dir)
 }
 

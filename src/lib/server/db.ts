@@ -109,7 +109,7 @@ export function setSetting(key: string, value: unknown): void {
     .run(key, JSON.stringify(value))
 }
 
-/** Test hook: close and forget the connection (a new TRUSTABL_CONSOLE_HOME takes effect). */
+/** Test hook: close and forget the connection (a new AGENT_DASHBOARD_HOME takes effect). */
 export function resetDbForTests(): void {
   const g = globalThis as GlobalWithDb
   g.__trustablDb?.close()

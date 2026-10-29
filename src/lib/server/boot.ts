@@ -14,8 +14,8 @@ export function boot(): Promise<void> {
   g.__trustablBooted ??= (async () => {
     db()
     const n = reapOrphans()
-    if (n) console.log(`[trustabl-console] marked ${n} run(s) interrupted by a restart`)
-    if (process.env.TRUSTABL_CONSOLE_NO_AUTORULES !== '1') void ensureRulesStatus()
+    if (n) console.log(`[agent-dashboard] marked ${n} run(s) interrupted by a restart`)
+    if (process.env.AGENT_DASHBOARD_NO_AUTORULES !== '1') void ensureRulesStatus()
   })()
   return g.__trustablBooted
 }

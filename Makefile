@@ -1,11 +1,11 @@
-# Trustabl Console — see README.md
+# Agent Dashboard — see README.md
 .PHONY: run dev tools test e2e parity lint typecheck check secrets audit wipe
 
 run:            ## Install what is missing, build, and serve on http://127.0.0.1:4317
 	@./scripts/run.sh
 
 dev:            ## Next.js dev server (hot reload), same localhost-only binding
-	@node scripts/fetch-tools.mjs && npx next dev -H 127.0.0.1 -p $${TRUSTABL_CONSOLE_PORT:-4317}
+	@node scripts/fetch-tools.mjs && npx next dev -H 127.0.0.1 -p $${AGENT_DASHBOARD_PORT:-4317}
 
 tools:          ## Download/verify the pinned trustabl + autofix CLIs
 	@node scripts/fetch-tools.mjs

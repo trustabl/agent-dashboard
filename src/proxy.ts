@@ -12,7 +12,7 @@ const LOCAL_HOSTS = new Set(['localhost', '127.0.0.1', '[::1]'])
 export function proxy(req: NextRequest) {
   const host = (req.headers.get('host') ?? '').replace(/:\d+$/, '').toLowerCase()
   if (!LOCAL_HOSTS.has(host)) {
-    return new NextResponse('Trustabl Console only answers on localhost.', { status: 403 })
+    return new NextResponse('Agent Dashboard only answers on localhost.', { status: 403 })
   }
   if (req.method !== 'GET' && req.method !== 'HEAD') {
     const origin = req.headers.get('origin')

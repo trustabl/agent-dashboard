@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
-# Deletes ALL Trustabl Console state: repos list, run history, artifacts,
+# Deletes ALL Agent Dashboard state: repos list, run history, artifacts,
 # downloaded CLIs, and the CLIs' own caches (rules, Probe results).
 # Your repositories and any SKILL.md the Console wrote into them are not touched.
 set -euo pipefail
-HOME_DIR="${TRUSTABL_CONSOLE_HOME:-$HOME/.trustabl-console}"
+HOME_DIR="${AGENT_DASHBOARD_HOME:-$HOME/.agent-dashboard}"
 targets=("$HOME_DIR")
 # On macOS the CLIs ignore XDG_CACHE_HOME and use ~/Library/Caches.
 if [ "$(uname -s)" = "Darwin" ]; then

@@ -16,8 +16,8 @@ import path from 'node:path'
 const root = path.resolve(__dirname, '..', '..')
 const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'trustabl-parity-'))
 const home = process.env.PARITY_HOME ?? path.join(tmp, 'home')
-process.env.TRUSTABL_CONSOLE_HOME = home
-process.env.TRUSTABL_CONSOLE_NO_AUTORULES = '1'
+process.env.AGENT_DASHBOARD_HOME = home
+process.env.AGENT_DASHBOARD_NO_AUTORULES = '1'
 const repos = path.join(tmp, 'repos')
 
 type Mods = {
@@ -31,7 +31,7 @@ let m: Mods
 const dockerUp = spawnSync('docker', ['info', '--format', '{{.ServerVersion}}'], { stdio: 'ignore', timeout: 15_000 }).status === 0
 
 beforeAll(async () => {
-  execFileSync('node', [path.join(root, 'scripts', 'fetch-tools.mjs')], { stdio: 'inherit', env: { ...process.env, TRUSTABL_CONSOLE_HOME: home } })
+  execFileSync('node', [path.join(root, 'scripts', 'fetch-tools.mjs')], { stdio: 'inherit', env: { ...process.env, AGENT_DASHBOARD_HOME: home } })
   fs.mkdirSync(repos, { recursive: true })
   for (const name of fs.readdirSync(path.join(root, 'tests', 'fixtures', 'repos'))) {
     const dest = path.join(repos, name)

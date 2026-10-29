@@ -9,7 +9,7 @@ next-env.d.ts
 
 # local state (never commit)
 .data/
-.trustabl-console/
+.agent-dashboard/
 .env
 .env.*
 !.env.example

@@ -1,4 +1,4 @@
-# Contributing to Trustabl Console
+# Contributing to Agent Dashboard
 
 Thanks for helping. The Console is a thin, local UI over three open-source
 CLIs, so most changes are small: a parser, a view model, a screen.

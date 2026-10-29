@@ -82,7 +82,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Use a fresh Console home
-        run: echo "TRUSTABL_CONSOLE_HOME=$RUNNER_TEMP/console-home" >> "$GITHUB_ENV"
+        run: echo "AGENT_DASHBOARD_HOME=$RUNNER_TEMP/console-home" >> "$GITHUB_ENV"
       - name: Start with one command and wait for the API
         run: |
           (make run > run.log 2>&1 &)
@@ -100,6 +100,6 @@ jobs:
       - name: Wipe removes all state
         run: |
           WIPE_YES=1 make wipe
-          test ! -e "$TRUSTABL_CONSOLE_HOME"
+          test ! -e "$AGENT_DASHBOARD_HOME"
       - if: failure()
         run: tail -100 run.log

@@ -1,4 +1,4 @@
-"""Fixture agent for Trustabl Console tests.
+"""Fixture agent for Agent Dashboard tests.
 
 Copied from agent-reliability-analyzer/testdata/deterministic-fixture
 (Apache-2.0). It deliberately triggers a known set of rules.

@@ -48,7 +48,7 @@ const LEADS: Record<ConsoleTool | 'default', string> = {
 const LANGS = ['python', 'typescript', 'go']
 
 interface ProbePrefs { runner: 'docker' | 'openshell'; model: string; llmUrl: string }
-const PREFS_KEY = 'trustabl_console_probe_prefs'
+const PREFS_KEY = 'agent_dashboard_probe_prefs'
 
 function loadPrefs(): ProbePrefs | null {
   try {

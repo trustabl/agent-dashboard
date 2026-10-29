@@ -1,7 +1,7 @@
-# Trustabl Console — System Architecture
+# Agent Dashboard — System Architecture
 
-This document is the authoritative reference for the architecture of Trustabl
-Console, the open-source, local edition. It describes the current
+This document is the authoritative reference for the architecture of Agent
+Dashboard, the open-source, local edition. It describes the current
 implementation: what each component is, how the components connect, and the
 conventions engineers and AI coding agents must follow.
 
@@ -13,7 +13,7 @@ file must be updated in the same commit.
 
 ## 1. Purpose
 
-Trustabl Console is a single-user web UI that runs on the developer's own
+Agent Dashboard is a single-user web UI that runs on the developer's own
 machine. It wraps two pinned open-source CLIs so that one developer can run
 **Forge** (`trustabl forge`, `trustabl forge check`), **Analyzer**
 (`trustabl scan`) and **Probe** (`autofix fix`) on local repositories from one
@@ -27,7 +27,7 @@ no login and no user or org model, and it listens on `127.0.0.1` only.
 ## 2. Repo Layout
 
 ```
-trustabl-console/
+agent-dashboard/
 ├── Makefile                  ← run | dev | tools | test | e2e | parity | lint | typecheck | check | secrets | audit | wipe
 ├── tools.lock.json           ← pinned CLI versions + per-platform SHA-256
 ├── scripts/
@@ -100,8 +100,8 @@ the CLIs as subprocesses.
              │              │              │ spawn (argv array, detached)
              ▼              ▼              ▼
    ┌───────────────┐ ┌─────────────┐ ┌──────────────────────────────┐
-   │ SQLite        │ │ Run folders │ │ Pinned CLIs (~/.trustabl-    │
-   │ console.db    │ │ runs/<id>/  │ │ console/bin/)                │
+   │ SQLite        │ │ Run folders │ │ Pinned CLIs (~/.agent-       │
+   │ console.db    │ │ runs/<id>/  │ │ dashboard/bin/)              │
    │ (node:sqlite) │ │ logs +      │ │  trustabl 0.1.14  scan/forge │
    └───────────────┘ │ artifacts   │ │  autofix  0.2.2   fix        │
                      └─────────────┘ └──────┬───────────────┬───────┘
@@ -158,7 +158,7 @@ at server start and again at the top of every route handler (`handler()` in
 2. Calls `reapOrphans()`, which marks every `running` row with no live process
    as `interrupted` and kills what is left of its process group.
 3. Calls `ensureRulesStatus()`, which refreshes the current rules SHA if it is
-   older than 6 h. Setting `TRUSTABL_CONSOLE_NO_AUTORULES=1` skips this
+   older than 6 h. Setting `AGENT_DASHBOARD_NO_AUTORULES=1` skips this
    step; the parity test does.
 4. Imports `actions/analyzer` and `actions/probe` for their side effect of
    registering run finalizers. Forge's finalizers are registered when boot
@@ -466,13 +466,13 @@ argv. Fixture values come from `$ENV_FIXTURES`, and a missing model comes from
 ### 6.1 One-Command Start (`make run` → `scripts/run.sh`)
 
 ```
-1. TRUSTABL_CONSOLE_HOME (default ~/.trustabl-console), mkdir + chmod 700
+1. AGENT_DASHBOARD_HOME (default ~/.agent-dashboard), mkdir + chmod 700
 2. Node >= 22.13 on PATH?  no → download Node 22.22.0 + SHASUMS256.txt from
    nodejs.org, verify, unpack into <home>/node/
 3. npm ci when sha256(package-lock.json)+platform differs from node_modules/.lock-sum
 4. node scripts/fetch-tools.mjs            (§5.4)
 5. next build when scripts/source-sum.mjs differs from .next/.src-sum
-6. exec next start -H 127.0.0.1 -p ${TRUSTABL_CONSOLE_PORT:-4317}
+6. exec next start -H 127.0.0.1 -p ${AGENT_DASHBOARD_PORT:-4317}
 7. instrumentation.ts → boot()             (§4.2)
 ```
 
@@ -585,8 +585,8 @@ Server stops mid-run      → next boot: reapOrphans → SIGKILL pgid, status in
 
 ### 7.1 Where State Lives
 
-All state is under `$TRUSTABL_CONSOLE_HOME`, which defaults to
-`~/.trustabl-console` (`src/lib/server/paths.ts`). Directories are created
+All state is under `$AGENT_DASHBOARD_HOME`, which defaults to
+`~/.agent-dashboard` (`src/lib/server/paths.ts`). Directories are created
 with mode 0700.
 
 | Path | Contents |
@@ -641,7 +641,7 @@ records the new version. Rules:
 ### 7.4 Wipe
 
 `make wipe` runs `scripts/wipe.sh`, which asks before deleting.
-`WIPE_YES=1 make wipe` skips the prompt. It deletes `$TRUSTABL_CONSOLE_HOME`
+`WIPE_YES=1 make wipe` skips the prompt. It deletes `$AGENT_DASHBOARD_HOME`
 and, on macOS, `~/Library/Caches/trustabl` and
 `~/Library/Caches/trustabl-probe`. Repos and any `SKILL.md` written into them
 are left alone.
@@ -695,7 +695,7 @@ Do not change the CLIs from this repo (CONTRIBUTING.md).
 ### 8.4 Error Handling
 
 - Server errors carry an HTTP status on the error object. `handler()` turns
-  them into `{ error }` JSON. A 5xx is logged with the `[trustabl-console]`
+  them into `{ error }` JSON. A 5xx is logged with the `[agent-dashboard]`
   prefix. The full message reaches the browser, because the person reading it
   runs the machine.
 - A failed run stores human-readable `error` text: the finalizer's message, or
@@ -720,11 +720,11 @@ reload replaces modules without losing them. Add new singletons the same way.
 
 | Variable | Effect |
 |----------|--------|
-| `TRUSTABL_CONSOLE_HOME` | State directory (default `~/.trustabl-console`) |
-| `TRUSTABL_CONSOLE_PORT` | Port for `make run` / `make dev` (default 4317) |
+| `AGENT_DASHBOARD_HOME` | State directory (default `~/.agent-dashboard`) |
+| `AGENT_DASHBOARD_PORT` | Port for `make run` / `make dev` (default 4317) |
 | `TRUSTABL_TOOLS_ARCHIVE_DIR` | Install the CLIs from local archives (offline) |
 | `TRUSTABL_BIN`, `AUTOFIX_BIN` | Development override of the binary path |
-| `TRUSTABL_CONSOLE_NO_AUTORULES=1` | Skip the rules-SHA refresh at boot |
+| `AGENT_DASHBOARD_NO_AUTORULES=1` | Skip the rules-SHA refresh at boot |
 | `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, `LLM_API_KEY` | Passed through to Probe, never stored |
 | `PARITY_HOME`, `E2E_PORT`, `PLAYWRIGHT_CHROMIUM_PATH` | Tests only |
 
@@ -803,7 +803,7 @@ When a pinned CLI is bumped, re-record `tests/fixtures/cli/` and
 
 None of these are in the current implementation.
 
-- **Public repo and green CI**: push to `github.com/trustabl/trustabl-console`
+- **Public repo and green CI**: push to `github.com/trustabl/agent-dashboard`
   and run the workflow on `main`. It has only run locally so far.
 - **WSL2 verification**: `make run` on a clean WSL2 machine, timed against the
   README's first-run claim.

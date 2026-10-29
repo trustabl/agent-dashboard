@@ -52,8 +52,8 @@ stores keys.
 
 ## Where state lives, and how to wipe it
 
-All state is under `~/.trustabl-console` (override with
-`TRUSTABL_CONSOLE_HOME`):
+All state is under `~/.agent-dashboard` (override with
+`AGENT_DASHBOARD_HOME`):
 
 | Path | What |
 | --- | --- |
