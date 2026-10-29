@@ -416,6 +416,7 @@ printf '%s\n' q | autofix fix \
 | `out/` | autofix does not create `--output-dir` itself |
 | `env-fixtures.env` | Written with mode 0600. Its contents are never stored in the DB (`options.envFixtures = '(provided)'`). |
 | stdin `q` | Quits the interactive fix review without applying anything |
+| `bin/openshell` (OpenShell runs only) | A wrapper put first on autofix's `PATH` (`openshell-shim.ts`). autofix 0.2.2 sends OpenShell 0.0.116 a sandbox policy it cannot parse (`network_policies: {outbound: []}`) and a sandbox name over its 19-character limit, so no sandbox would ever start. The wrapper rewrites the policy to `network_policies: {}` (same meaning) and shortens `autofix-<ms>` to `af-<ms>`, mapping it back in OpenShell's output. Remove it once autofix targets the current OpenShell CLI. |
 
 The Console enforces these rules:
 
