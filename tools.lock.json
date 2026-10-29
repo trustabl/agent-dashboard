@@ -2,15 +2,15 @@
   "$comment": "Pinned CLI versions. scripts/fetch-tools.mjs downloads these release archives from GitHub and refuses any archive whose SHA-256 differs. Bump version + hashes together.",
   "tools": {
     "trustabl": {
-      "version": "0.1.14",
+      "version": "0.1.15",
       "repo": "trustabl/agent-reliability-analyzer",
       "binary": "trustabl",
       "archive": "trustabl_{version}_{os}_{arch}.tar.gz",
       "sha256": {
-        "trustabl_0.1.14_darwin_amd64.tar.gz": "245daa020fd6ed2b1d88bbea6a476819f4061796615860e734d5f84a709dfb65",
-        "trustabl_0.1.14_darwin_arm64.tar.gz": "68c6b4634d0bed450e9dac6b720cd43753e20c200617f7a079459bd2c5cfaf34",
-        "trustabl_0.1.14_linux_amd64.tar.gz": "fffe35a8122724ff26bf40d72e1a67a1ab8ae224d9e2df4a7eff00c91aec7a96",
-        "trustabl_0.1.14_linux_arm64.tar.gz": "40c1448bb2b27b01cc7df545f5e5b9821768068178c4f6dd23fba95073deb43c"
+        "trustabl_0.1.15_darwin_amd64.tar.gz": "e8dfdc06186bdf51bce8541214de675b3c298f7fd3ff577e95d9d3cebb9d5613",
+        "trustabl_0.1.15_darwin_arm64.tar.gz": "ac2f52d452080cdd1d9d742d033b204e49a582e8491e04a85a0db0acc219fee5",
+        "trustabl_0.1.15_linux_amd64.tar.gz": "c811f469fe74ebac8c01d7c845867c66810c368fb0c24f258054d3227a2fcf8e",
+        "trustabl_0.1.15_linux_arm64.tar.gz": "7cfdd2bcb6d453f79d635d0d2fe973065d0acc53b5f0ba4dbc9d6cff6d5a032d"
       }
     },
     "autofix": {

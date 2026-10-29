@@ -102,7 +102,7 @@ the CLIs as subprocesses.
    ┌───────────────┐ ┌─────────────┐ ┌──────────────────────────────┐
    │ SQLite        │ │ Run folders │ │ Pinned CLIs (~/.agent-       │
    │ console.db    │ │ runs/<id>/  │ │ dashboard/bin/)              │
-   │ (node:sqlite) │ │ logs +      │ │  trustabl 0.1.14  scan/forge │
+   │ (node:sqlite) │ │ logs +      │ │  trustabl 0.1.15  scan/forge │
    └───────────────┘ │ artifacts   │ │  autofix  0.2.2   fix        │
                      └─────────────┘ └──────┬───────────────┬───────┘
                                             │               │
@@ -368,7 +368,7 @@ argv array, never through a shell. The contract with each CLI is:
 ### 5.2 Analyzer and Forge Engine (`trustabl` binary)
 
 **Source**: `github.com/trustabl/agent-reliability-analyzer` (open source, do not modify)
-**Pinned**: 0.1.14 (`tools.lock.json`)
+**Pinned**: 0.1.15 (`tools.lock.json`)
 
 | Action | Invocation (cwd = repo unless noted) |
 |--------|--------------------------------------|

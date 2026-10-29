@@ -1,5 +1,5 @@
 // Shared types between the server and the browser. CLI output shapes mirror
-// trustabl 0.1.14 (internal/models) and autofix 0.2.2 (internal/profile,
+// trustabl 0.1.15 (internal/models) and autofix 0.2.2 (internal/profile,
 // internal/findings) — only the fields the Console reads are typed.
 
 export type ConsoleTool = 'forge' | 'analyzer' | 'probe'
