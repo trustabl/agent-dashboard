@@ -30,7 +30,7 @@ test('Analyzer: empty state, scan a new path, findings, history, rescan diff, do
   expect(sevs.map((s) => order.indexOf(s))).toEqual([...sevs.map((s) => order.indexOf(s))].sort((a, b) => a - b))
   const link = panel.getByRole('link', { name: 'OAI-005' })
   await expect(link).toHaveAttribute('href', /trustabl-rulebook\/blob\/main\/openai_sdk\/POLICY_INDEX\.md/)
-  await expect(panel.getByRole('button', { name: /Copy for Cursor/ }).first()).toBeVisible()
+  await expect(panel.getByRole('button', { name: /Copy fix prompt/ }).first()).toBeVisible()
   // Test-path findings are hidden by default.
   await expect(page.getByText(/test-path finding\(s\) hidden/)).toBeVisible()
   await expect(panel.getByText('fetch_fixture')).toHaveCount(0)

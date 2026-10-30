@@ -103,9 +103,10 @@ export function rulebookUrl(category: string | null | undefined, ruleId: string)
   return `${base}/blob/main/${encodeURIComponent(category)}/POLICY_INDEX.md#:~:text=${encodeURIComponent(ruleId)}`
 }
 
-/** The text "Copy for Cursor" puts on the clipboard: everything the CLI said
+/** The text "Copy fix prompt" puts on the clipboard for any coding agent
+ *  (Cursor, Claude Code, Copilot, Codex…): everything the CLI said
  *  about the finding, nothing invented. */
-export function cursorPrompt(f: {
+export function fixPrompt(f: {
   rule_id: string
   title: string
   file_path?: string | null

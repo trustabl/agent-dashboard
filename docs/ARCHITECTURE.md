@@ -321,7 +321,7 @@ real CLI output.
 
 | File | Responsibility |
 |------|----------------|
-| `findings.ts` | Severity order and ranking, open counts (info/META and test-path excluded), readiness, OTel state, scan diff → open / introduced / resolved, rulebook URL, "Copy for Cursor" text |
+| `findings.ts` | Severity order and ranking, open counts (info/META and test-path excluded), readiness, OTel state, scan diff → open / introduced / resolved, rulebook URL, "Copy fix prompt" text |
 | `forge.ts` | Parse the SKILL.md stamp, outline the skill (OTel encoded / partial / none), parse `forge check` output, detect "no SDK" |
 | `probe.ts` | Flags from evidence `source` and stderr, unique egress, cache state, draft parsing, guard deny list, forbidden draft entries, list evaluation, draft state incl. "withheld" |
 | `shell.ts` | POSIX quoting and `formatCommand()`, which produces every Copy CLI string |
