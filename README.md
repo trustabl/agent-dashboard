@@ -1,8 +1,9 @@
-# Trustabl Console
+# Agent Dashboard
 
-A local, single-user web UI for Trustabl's open-source tools. You can run
-**Forge**, **Analyzer** and **Probe** on your own repos from one app, without
-installing any of them.
+Agent dashboard runs reliability scans, skills and network access probes on your
+own repos from one local, single-user web UI. It wraps Trustabl's open-source
+**Analyzer**, **Forge** and **Probe**, so you don't have to install any of them.
+Policy and telemetry via OpenTelemetry are coming soon.
 
 | Page | Wraps | Commands |
 | --- | --- | --- |
@@ -19,7 +20,7 @@ installing any of them.
 
 ## First run (≈ 5 minutes)
 
-[![CI](https://github.com/trustabl/trustabl-console/actions/workflows/ci.yml/badge.svg)](https://github.com/trustabl/trustabl-console/actions/workflows/ci.yml)
+[![CI](https://github.com/trustabl/agent-dashboard/actions/workflows/ci.yml/badge.svg)](https://github.com/trustabl/agent-dashboard/actions/workflows/ci.yml)
 
 Requirements: macOS, Linux or WSL2, with `git`, `curl`, `tar` and `make`.
 You need Node.js 22.13 or newer; if you don't have it, `make run` installs a
@@ -27,8 +28,8 @@ private copy. To run Probe you also need Docker (or OpenShell) and an
 OpenAI-compatible LLM endpoint, for example Ollama.
 
 ```sh
-git clone https://github.com/trustabl/trustabl-console.git
-cd trustabl-console
+git clone https://github.com/trustabl/agent-dashboard.git
+cd agent-dashboard
 make run            # or: ./scripts/run.sh
 ```
 
@@ -46,7 +47,7 @@ ollama serve & ollama pull qwen2.5-coder:32b
 ```
 
 Cloud models read their key from `OPENAI_API_KEY`, `ANTHROPIC_API_KEY` or
-`LLM_API_KEY` in the environment you start the Console from. The Console never
+`LLM_API_KEY` in the environment you start the dashboard from. The dashboard never
 stores keys.
 
 ## Where state lives, and how to wipe it
@@ -75,7 +76,7 @@ This deletes everything above. On macOS it also deletes the CLIs' caches in
 make dev            # hot reload on 127.0.0.1:4317
 make check          # eslint + tsc + vitest
 make e2e            # Playwright against tests/fixtures/repos (Probe cases need Docker)
-make parity         # artifacts from a Console run == the same CLI run (timestamps masked)
+make parity         # artifacts from a dashboard run == the same CLI run (timestamps masked)
 make secrets        # gitleaks, as in CI
 ```
 
