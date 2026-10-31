@@ -17,7 +17,7 @@ Agent Dashboard is a single-user web UI that runs on the developer's own
 machine. It wraps two pinned open-source CLIs so that one developer can run
 **Forge** (`trustabl forge`, `trustabl forge check`), **Analyzer**
 (`trustabl scan`) and **Probe** (`autofix fix`) on local repositories from one
-app, without installing or configuring either tool. The Console starts the
+app, without installing or configuring either tool. The dashboard starts the
 CLIs as subprocesses, keeps their artifacts and a run history on disk, and
 shows only values that the CLI output or its own run history contain. It has
 no login and no user or org model, and it listens on `127.0.0.1` only.
@@ -34,7 +34,7 @@ agent-dashboard/
 │   ├── run.sh                ← `make run`: Node bootstrap, npm ci, fetch CLIs, build-if-changed, serve
 │   ├── fetch-tools.mjs       ← download + SHA-256-verify the pinned CLIs
 │   ├── source-sum.mjs        ← hash of build inputs (run.sh rebuilds only when it changes)
-│   └── wipe.sh               ← `make wipe`: delete all Console state
+│   └── wipe.sh               ← `make wipe`: delete all dashboard state
 ├── src/
 │   ├── proxy.ts              ← Next.js request proxy: localhost Host + same-origin checks
 │   ├── instrumentation.ts    ← server start hook → boot()
@@ -53,7 +53,7 @@ agent-dashboard/
 ├── tests/
 │   ├── unit/                 ← Vitest + Testing Library (lib/ and components/)
 │   ├── e2e/                  ← Playwright, incl. axe, keyboard and reflow specs
-│   ├── parity/               ← Console artifacts == CLI artifacts
+│   ├── parity/               ← dashboard artifacts == CLI artifacts
 │   └── fixtures/             ← fixture repos, recorded CLI output, recorded view models
 ├── docs/                     ← this file
 └── .github/workflows/ci.yml  ← GitHub Actions
@@ -68,7 +68,7 @@ reference material. Never treat them as part of the system:
 |------|------------|
 | `.data/` | Owner's local scratch (build logs, offline CLI archives in `.data/dl/`, sync bundles). Git-ignored. |
 | `.next/`, `node_modules/`, `*.tsbuildinfo`, `next-env.d.ts` | Build and dependency output. |
-| `test-results/`, `playwright-report/`, `tests/.tmp/` | Test output and the throwaway e2e Console home. |
+| `test-results/`, `playwright-report/`, `tests/.tmp/` | Test output and the throwaway e2e dashboard home. |
 
 ---
 
@@ -134,7 +134,7 @@ Sigstore signing is always off (`--no-sign`).
 ### 4.1 Request Proxy — `src/proxy.ts`
 
 This file is the Next.js 16 "proxy" (formerly middleware) and matches every
-path. It is the only access control, because the Console runs commands on the
+path. It is the only access control, because the dashboard runs commands on the
 machine and has no login:
 
 1. If the `Host` header is not `localhost`, `127.0.0.1` or `[::1]`, it answers
@@ -142,7 +142,7 @@ machine and has no login:
 2. For any method other than GET or HEAD, the `Origin` header, when present,
    must be a local host with the same `host:port`. Without an `Origin`,
    `Sec-Fetch-Site` must be `same-origin` or `none`. Otherwise it answers
-   **403**. This stops a web page you visit from posting to the Console.
+   **403**. This stops a web page you visit from posting to the dashboard.
 
 The bind address (`-H 127.0.0.1`) is the other half of this protection. It is
 set in `package.json`, the Makefile and `scripts/run.sh`.
@@ -197,7 +197,7 @@ the message.
 
 | Method | Path | Handler → server code | Returns |
 |--------|------|------------------------|---------|
-| GET | `/api/status` | `tools.toolInfo`, `currentRules`, `listRepos`, `listRuns` | Console home, both CLIs (pinned, path, installed, reported version), rules SHA, repo count, running runs |
+| GET | `/api/status` | `tools.toolInfo`, `currentRules`, `listRepos`, `listRuns` | dashboard home, both CLIs (pinned, path, installed, reported version), rules SHA, repo count, running runs |
 | GET | `/api/overview` | `queries/views.overviewView` | Overview tiles, filter counts, one row per repo |
 | GET | `/api/repositories` | `repos.listRepos` or `views.reposWithFlags` (`?with=flags`) | Repos (+ has skill, Analyzer tool-file count) |
 | POST | `/api/repositories` | `repos.addRepo` | 201, the new repo (`{path, create}`) |
@@ -335,7 +335,7 @@ real CLI output.
   themes to WCAG 2.1 AA.
 - `patterns/` holds the `AppShell` (sidebar + header), `BrandMark` and
   `EmptyState`.
-- `console/` holds the Console's own building blocks:
+- `console/` holds the dashboard's own building blocks:
   - `RunDialog`, the single "Run a local tool" dialog, with a focus trap;
   - `RunLog`, the live log through `EventSource`;
   - `RunHistory`, `CopyCli` and `ArtifactViewer`;
@@ -348,14 +348,14 @@ real CLI output.
 
 ### 5.1 Why CLI Subprocess (Sidecar Pattern)
 
-The engines are separate open-source projects written in Go. The Console is a
-Node app, and the brief forbids modifying the CLIs. So the Console runs the
+The engines are separate open-source projects written in Go. The dashboard is a
+Node app, and the CLIs are not changed from here (see `CONTRIBUTING.md`). So the dashboard runs the
 **released binaries as subprocesses**, through `child_process.spawn` with an
 argv array, never through a shell. The contract with each CLI is:
 
-- **Input**: flags, a working directory, files the Console writes into the run
+- **Input**: flags, a working directory, files the dashboard writes into the run
   folder, and environment variables.
-- **Output**: artifact files written to paths the Console passes, plus the exit
+- **Output**: artifact files written to paths the dashboard passes, plus the exit
   code. stdout and stderr are logged for people to read. Code parses them only
   where the CLI writes no file:
   - `forge check` verdicts;
@@ -374,7 +374,7 @@ argv array, never through a shell. The contract with each CLI is:
 |--------|--------------------------------------|
 | Scan | `trustabl scan <repo> --json-out <run>/scan.json --sarif-out <run>/trustabl.sarif --no-color` |
 | Generate skill | `trustabl forge <repo> [--policy a,b] [--lang python,typescript,go] [--rules-ref <ref>] -o <run>/SKILL.md` |
-| Write skill (confirmed) | No CLI call: the Console copies `<run>/SKILL.md` to `<repo>/.claude/skills/trustabl-pre-coding/SKILL.md`, then runs a check |
+| Write skill (confirmed) | No CLI call: the dashboard copies `<run>/SKILL.md` to `<repo>/.claude/skills/trustabl-pre-coding/SKILL.md`, then runs a check |
 | forge check | `trustabl forge check <repo>/.claude/skills/trustabl-pre-coding/SKILL.md [--rules-ref <ref>]` |
 | Rules SHA | `trustabl forge --policy claude_skill -o <run>/rules-probe.SKILL.md`, cwd = `<run>/empty` |
 | Version | `trustabl version` |
@@ -409,7 +409,7 @@ printf '%s\n' q | autofix fix \
   [--allow-write-tools] [--no-cache] [--sandbox-args '<args>']
 ```
 
-| Input the Console writes | Why |
+| Input the dashboard writes | Why |
 |--------------------------|-----|
 | `class.yaml` | Analyzer grant set: one member per file holding a tool in the latest `scan.json` `tools[]`. Draft agent: the repo root, entrypoints auto-detected. Class name = slug of the repo folder. |
 | `deny-list.txt` | The user's entries + `0.0.0.0` and `::`, the guard |
@@ -418,7 +418,7 @@ printf '%s\n' q | autofix fix \
 | stdin `q` | Quits the interactive fix review without applying anything |
 | `bin/openshell` (OpenShell runs only) | A wrapper put first on autofix's `PATH` (`openshell-shim.ts`). autofix 0.2.2 sends OpenShell 0.0.116 a sandbox policy it cannot parse (`network_policies: {outbound: []}`) and a sandbox name over its 19-character limit, so no sandbox would ever start. The wrapper rewrites the policy to `network_policies: {}` (same meaning) and shortens `autofix-<ms>` to `af-<ms>`, mapping it back in OpenShell's output. Remove it once autofix targets the current OpenShell CLI. |
 
-The Console enforces these rules:
+The dashboard enforces these rules:
 
 - **`--no-sign`** is always passed.
 - **`--allow-write-tools`** is refused unless the person confirmed the
@@ -427,7 +427,7 @@ The Console enforces these rules:
 - **The runner** is checked before every Start (`docker info` /
   `openshell sandbox list`). If it is unreachable, the refusal includes the
   fix.
-- **LLM keys** are passed only through the environment the Console was started
+- **LLM keys** are passed only through the environment the dashboard was started
   in (`OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, `LLM_API_KEY`). They are never
   stored. Only the variable names are shown.
 - **Drafts**: after the run, the draft is re-checked. It is withheld if it
@@ -593,7 +593,7 @@ with mode 0700.
 | Path | Contents |
 |------|----------|
 | `console.db` (+ `-wal`, `-shm`) | SQLite database (§7.2) |
-| `runs/<id>/` | `command.sh`, `stdout.log`, `stderr.log`, `output.log`, the inputs the Console wrote, and the artifacts the CLI wrote |
+| `runs/<id>/` | `command.sh`, `stdout.log`, `stderr.log`, `output.log`, the inputs the dashboard wrote, and the artifacts the CLI wrote |
 | `bin/<tool>-<version>/` | Pinned binaries + `SHA256` |
 | `cache/` | `XDG_CACHE_HOME` for the CLIs (rules, Probe result cache) on Linux/WSL |
 | `node/` | Private Node.js, only when `make run` had to install it |
@@ -669,7 +669,7 @@ src/lib/*.ts                    ← pure functions shared by server and client
 
 ### 8.2 Never Invent Data
 
-Every value on screen comes from a CLI artifact, CLI output, or the Console's
+Every value on screen comes from a CLI artifact, CLI output, or the dashboard's
 run history. If the design shows something no pinned CLI produces:
 
 1. render `<Unavailable what="…" />` ("… n/a");
@@ -782,7 +782,7 @@ The target is WCAG 2.1 AA in both themes:
 |---------|-------|----------------|
 | `make test` | Vitest (`tests/unit/lib`, `tests/unit/components`) | Parsers and derivations against recorded real CLI output (`tests/fixtures/cli/`); page components against recorded view models (`tests/fixtures/views/`) |
 | `make e2e` | Playwright (`tests/e2e/`) | `tests/e2e/setup.mjs` makes a fresh home in `tests/.tmp/home` and git-initialised copies of `tests/fixtures/repos`. A real `next build` + `next start` on port 4318 runs with the real pinned CLIs. One spec per page, plus the a11y, keyboard and reflow specs. Probe cases skip when Docker is down. |
-| `make parity` | Vitest (`tests/parity/parity.test.ts`) | Each tool runs through the Console's run engine, then the run's recorded command runs in a plain shell. The artifacts must match, with timestamps and Probe's harness ID masked. |
+| `make parity` | Vitest (`tests/parity/parity.test.ts`) | Each tool runs through the dashboard's run engine, then the run's recorded command runs in a plain shell. The artifacts must match, with timestamps and Probe's harness ID masked. |
 | `make check` | lint + `tsc --noEmit` + unit | — |
 | `make secrets`, `make audit` | gitleaks, npm audit | §9 |
 
@@ -809,7 +809,7 @@ None of these are in the current implementation.
 - **WSL2 verification**: `make run` on a clean WSL2 machine, timed against the
   README's first-run claim.
 - **Owner design review**: of every screen, light and dark.
-- **Upstream CLI gaps**, to adopt in the Console when the CLIs
+- **Upstream CLI gaps**, to adopt in the dashboard when the CLIs
   provide them:
   - a stable agent ID;
   - one rules SHA across `scan` and `forge`;
