@@ -13,7 +13,7 @@ Policy and telemetry via OpenTelemetry are coming soon.
 | Probe | [agent-network-access-probe](https://github.com/trustabl/agent-network-access-probe) | `autofix fix` |
 
 - Runs on `127.0.0.1` only. There is no login and no user or org model.
-- Pinned CLIs: `trustabl` 0.1.14 and `autofix` 0.2.2. They are downloaded on
+- Pinned CLIs: `trustabl` 0.1.15 and `autofix` 0.2.2. They are downloaded on
   first start and their SHA-256 is checked (`tools.lock.json`).
 - Your source code stays on your machine. Probe sends tool source only to the
   LLM endpoint you configure.
@@ -52,8 +52,8 @@ stores keys.
 
 ## Where state lives, and how to wipe it
 
-All state is under `~/.trustabl-console` (override with
-`TRUSTABL_CONSOLE_HOME`):
+All state is under `~/.agent-dashboard` (override with
+`AGENT_DASHBOARD_HOME`):
 
 | Path | What |
 | --- | --- |

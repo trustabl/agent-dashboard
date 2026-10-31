@@ -94,7 +94,9 @@ test('Probe: Analyzer grant set run → profile, egress, extras apart, artifacts
   expect(await startProbe(page, {})).toBe('succeeded')
 
   await expect(acme).toContainText('class acme-support')
-  await expect(acme).toContainText(/fresh · Docker|cache hit · Docker/)
+  // Any cache state: on macOS Probe's result cache lives in ~/Library/Caches,
+  // outside the throwaway e2e home, so earlier runs can leave some tools cached.
+  await expect(acme).toContainText(/(fresh|cache hit|partial cache) · Docker/)
   await expect(acme).not.toContainText('untested')
   // No egress observed → the draft allows nothing, and says so.
   await expect(acme).toContainText('not drafted')

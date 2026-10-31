@@ -13,7 +13,7 @@ import { CopyCli } from '@/components/console/CopyCli'
 import { RunStatusPill } from '@/components/console/RunLog'
 import { ImportSarif } from './ImportSarif'
 import { useApi } from '@/lib/client/api'
-import { cursorPrompt, locationOf, readinessTone, rulebookUrl } from '@/lib/findings'
+import { fixPrompt, locationOf, readinessTone, rulebookUrl } from '@/lib/findings'
 import { shortDateTime } from '@/lib/time'
 import { shortSha } from '@/lib/text'
 import type { AnalyzerRepo, FindingView } from '@/lib/server/queries/views'
@@ -276,7 +276,7 @@ function FindingMini({ findings }: { findings: FindingView[] }) {
                 {f.status === 'introduced' && <Subtext>introduced this scan</Subtext>}
               </td>
               <td className="px-2.5 py-2 max-w-[260px]"><span className="block truncate font-mono text-sm text-(--color-text-secondary)" title={locationOf(f)}>{locationOf(f)}</span></td>
-              <td className="px-2.5 py-2 text-right"><CopyCli command={cursorPrompt(f)} label="Copy for Cursor" toastText="Finding copied for Cursor" /></td>
+              <td className="px-2.5 py-2 text-right"><CopyCli command={fixPrompt(f)} label="Copy fix prompt" toastText="Fix prompt copied — paste it into your coding agent" /></td>
             </tr>
           ))}
         </tbody>
@@ -382,7 +382,7 @@ function AllFindings({ includeTests, setIncludeTests }: { includeTests: boolean;
                 <Td key="r"><span className="block truncate">{f.repoName} · {f.scope ?? 'repo'}{f.tool_name ? ` ${f.tool_name}` : ''}</span></Td>,
                 <Td key="l"><span className="block truncate font-mono text-sm text-(--color-text-secondary)" title={locationOf(f)}>{locationOf(f)}</span></Td>,
                 <Td key="a" className="text-right">
-                  {f.status === 'resolved' ? <span className="text-sm text-(--color-text-tertiary)">gone on scan <RelTime at={f.goneAt} /></span> : <CopyCli command={cursorPrompt(f)} label="Copy for Cursor" toastText="Finding copied for Cursor" />}
+                  {f.status === 'resolved' ? <span className="text-sm text-(--color-text-tertiary)">gone on scan <RelTime at={f.goneAt} /></span> : <CopyCli command={fixPrompt(f)} label="Copy fix prompt" toastText="Fix prompt copied — paste it into your coding agent" />}
                 </Td>,
               ]}
               detail={

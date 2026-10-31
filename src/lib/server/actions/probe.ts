@@ -3,6 +3,7 @@ import path from 'node:path'
 import { stringify as toYaml } from 'yaml'
 import { binaryPath } from '../tools'
 import { execCapture } from '../exec'
+import { openShellShimEnv } from '../openshell-shim'
 import { recordArtifact, registerFinalizer, type FinalizeContext, type FinalizeResult, type StartRunInput } from '../runner'
 import { InputError, type RepoRow } from '../repos'
 import { scansForRepo, scanJson } from '../queries/scans'
@@ -141,7 +142,8 @@ export function probeRun(repo: RepoRow, o: ProbeOptions): StartRunInput {
         files.fixtures = path.join(dir, 'env-fixtures.env')
         fs.writeFileSync(files.fixtures, o.envFixtures.trim() + '\n', { mode: 0o600 })
       }
-      return { bin: binaryPath('autofix'), args: argvFor(o, files), cwd: repo.path, stdin: QUIT_REVIEW }
+      const env = o.runner === 'openshell' ? openShellShimEnv(dir) : undefined
+      return { bin: binaryPath('autofix'), args: argvFor(o, files), cwd: repo.path, stdin: QUIT_REVIEW, env }
     },
   }
 }

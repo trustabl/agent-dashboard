@@ -28,7 +28,7 @@ export default defineConfig({
     reuseExistingServer: false,
     timeout: 240_000,
     env: {
-      TRUSTABL_CONSOLE_HOME: E2E_HOME,
+      AGENT_DASHBOARD_HOME: E2E_HOME,
       NODE_OPTIONS: '--disable-warning=ExperimentalWarning',
       NEXT_TELEMETRY_DISABLED: '1',
     },

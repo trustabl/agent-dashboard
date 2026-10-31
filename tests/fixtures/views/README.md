@@ -9,6 +9,6 @@ after real runs of the pinned CLIs on the fixture repos (`../repos`):
 3. `trustabl forge` on `acme-support`, written after confirmation, `forge check`
 4. `agent.py` edited (`timeout=10`), `trustabl scan` again
 
-Absolute paths were rewritten to `/work/repos/…` and `/home/me/.trustabl-console/…`;
+Absolute paths were rewritten to `/work/repos/…` and `/home/me/.agent-dashboard/…`;
 nothing else was changed. Component tests render these instead of hand-written
 objects, so what they assert is what the real pipeline produces.

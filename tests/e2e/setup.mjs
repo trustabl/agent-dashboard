@@ -14,7 +14,7 @@ const REPOS = path.join(tmp, 'repos')
 fs.rmSync(HOME, { recursive: true, force: true })
 fs.rmSync(REPOS, { recursive: true, force: true })
 fs.mkdirSync(REPOS, { recursive: true })
-execFileSync('node', [path.join(root, 'scripts', 'fetch-tools.mjs')], { stdio: 'inherit', env: { ...process.env, TRUSTABL_CONSOLE_HOME: HOME } })
+execFileSync('node', [path.join(root, 'scripts', 'fetch-tools.mjs')], { stdio: 'inherit', env: { ...process.env, AGENT_DASHBOARD_HOME: HOME } })
 for (const name of fs.readdirSync(path.join(root, 'tests', 'fixtures', 'repos'))) {
   const dest = path.join(REPOS, name)
   fs.cpSync(path.join(root, 'tests', 'fixtures', 'repos', name), dest, { recursive: true })

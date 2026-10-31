@@ -51,9 +51,9 @@ export function AppShell({ children }: { children: ReactNode }) {
       </a>
       <div className="grid h-screen grid-cols-[240px_1fr] max-md:grid-cols-[64px_1fr] bg-(--color-bg-page)">
         <nav aria-label="Main" className="flex flex-col overflow-y-auto bg-(--color-bg-surface) border-r border-(--color-border-muted) px-4 pt-[17px] pb-4 max-md:px-2">
-          <Link href="/" className="flex items-center gap-2.5 cursor-pointer" aria-label="Trustabl Console — Overview">
+          <Link href="/" className="flex items-center gap-2.5 cursor-pointer" aria-label="Agent Dashboard — Overview">
             <span className="grid h-9 w-9 shrink-0 place-items-center"><BrandMark /></span>
-            <span className="text-base font-semibold text-(--color-text-primary) max-md:hidden">Trustabl</span>
+            <span className="text-base font-semibold text-(--color-text-primary) max-md:hidden">Agent Dashboard</span>
           </Link>
           <hr className="border-0 border-t border-(--color-border-muted) -mx-4 mt-[17px] mb-3" />
           <ul className="flex-1 list-none m-0 p-0">

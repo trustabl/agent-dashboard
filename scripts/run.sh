@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# One-command start for Trustabl Console (what `make run` calls).
+# One-command start for Agent Dashboard (what `make run` calls).
 #   1. use Node >= 22.13 from PATH, or install a private copy under the Console home
 #   2. install npm dependencies (npm ci) when package-lock.json changed
 #   3. fetch the pinned trustabl + autofix CLIs (SHA-256 verified)
@@ -8,11 +8,11 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT"
-export TRUSTABL_CONSOLE_HOME="${TRUSTABL_CONSOLE_HOME:-$HOME/.trustabl-console}"
-PORT="${TRUSTABL_CONSOLE_PORT:-4317}"
+export AGENT_DASHBOARD_HOME="${AGENT_DASHBOARD_HOME:-$HOME/.agent-dashboard}"
+PORT="${AGENT_DASHBOARD_PORT:-4317}"
 NODE_VERSION="22.22.0"   # used only when no suitable Node is on PATH
-mkdir -p "$TRUSTABL_CONSOLE_HOME"
-chmod 700 "$TRUSTABL_CONSOLE_HOME"
+mkdir -p "$AGENT_DASHBOARD_HOME"
+chmod 700 "$AGENT_DASHBOARD_HOME"
 
 say() { printf '\033[1m▸ %s\033[0m\n' "$*"; }
 
@@ -25,9 +25,9 @@ install_node() {
   local os arch dir tarball base
   case "$(uname -s)" in Darwin) os=darwin ;; Linux) os=linux ;; *) echo "Unsupported OS $(uname -s)"; exit 1 ;; esac
   case "$(uname -m)" in x86_64|amd64) arch=x64 ;; arm64|aarch64) arch=arm64 ;; *) echo "Unsupported CPU $(uname -m)"; exit 1 ;; esac
-  dir="$TRUSTABL_CONSOLE_HOME/node/node-v$NODE_VERSION-$os-$arch"
+  dir="$AGENT_DASHBOARD_HOME/node/node-v$NODE_VERSION-$os-$arch"
   if [ ! -x "$dir/bin/node" ]; then
-    say "Node >= 22.13 not found — installing Node $NODE_VERSION into $TRUSTABL_CONSOLE_HOME/node"
+    say "Node >= 22.13 not found — installing Node $NODE_VERSION into $AGENT_DASHBOARD_HOME/node"
     base="https://nodejs.org/dist/v$NODE_VERSION"
     tarball="node-v$NODE_VERSION-$os-$arch.tar.gz"
     local tmp; tmp="$(mktemp -d)"
@@ -35,8 +35,8 @@ install_node() {
     curl -fsSL "$base/SHASUMS256.txt" -o "$tmp/SHASUMS256.txt"
     (cd "$tmp" && grep " $tarball\$" SHASUMS256.txt | (sha256sum -c - 2>/dev/null || shasum -a 256 -c -)) \
       || { echo "Node download failed its checksum; aborting."; exit 1; }
-    mkdir -p "$TRUSTABL_CONSOLE_HOME/node"
-    tar -xzf "$tmp/$tarball" -C "$TRUSTABL_CONSOLE_HOME/node"
+    mkdir -p "$AGENT_DASHBOARD_HOME/node"
+    tar -xzf "$tmp/$tarball" -C "$AGENT_DASHBOARD_HOME/node"
     rm -rf "$tmp"
   fi
   export PATH="$dir/bin:$PATH"
@@ -65,7 +65,7 @@ if [ ! -f .next/BUILD_ID ] || [ ! -f .next/.src-sum ] || [ "$(cat .next/.src-sum
   echo "$SRC_SUM" > .next/.src-sum
 fi
 
-say "Trustabl Console → http://127.0.0.1:$PORT  (state: $TRUSTABL_CONSOLE_HOME, Ctrl-C to stop)"
+say "Agent Dashboard → http://127.0.0.1:$PORT  (state: $AGENT_DASHBOARD_HOME, Ctrl-C to stop)"
 export NEXT_TELEMETRY_DISABLED=1
 export NODE_OPTIONS="${NODE_OPTIONS:-} --disable-warning=ExperimentalWarning"
 exec npx next start -H 127.0.0.1 -p "$PORT"

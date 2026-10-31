@@ -1,5 +1,5 @@
 {
-  "name": "trustabl-console",
+  "name": "agent-dashboard",
   "version": "0.1.0",
   "private": true,
   "description": "Local, single-user web UI for Trustabl's open-source tools: Forge, Analyzer and Probe.",

@@ -1,7 +1,7 @@
 import fs from 'node:fs'
 import path from 'node:path'
 import {
-  countsAsOpen, cursorPrompt, diffScans, locationOf, openCount, otelState, rankFindings, readiness, rulebookUrl, severityCounts,
+  countsAsOpen, fixPrompt, diffScans, locationOf, openCount, otelState, rankFindings, readiness, rulebookUrl, severityCounts,
 } from '@/lib/findings'
 import { fingerprint } from '@/lib/server/fingerprint'
 import { parseTrustablSarif } from '@/lib/server/sarif'
@@ -118,9 +118,9 @@ describe('presentation helpers', () => {
   it('links rule IDs to trustabl-rulebook', () => {
     expect(rulebookUrl('openai_sdk', 'OAI-005')).toBe('https://github.com/trustabl/trustabl-rulebook/blob/main/openai_sdk/POLICY_INDEX.md#:~:text=OAI-005')
   })
-  it('builds the Copy for Cursor prompt from CLI text only', () => {
+  it('builds the Copy fix prompt text from CLI text only', () => {
     const f = scan.findings!.find((x) => x.rule_id === 'OAI-005')!
-    const text = cursorPrompt(f)
+    const text = fixPrompt(f)
     expect(text).toContain('OAI-005')
     expect(text).toContain(`agent.py:${f.start_line}-${f.end_line}`)
     expect(text).toContain(f.suggested_fix!.trim())

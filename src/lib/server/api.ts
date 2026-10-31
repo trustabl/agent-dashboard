@@ -12,7 +12,7 @@ export function handler<A extends unknown[]>(fn: (...args: A) => Promise<Respons
     } catch (e) {
       const err = e as Error & { status?: number }
       const status = err.status ?? 500
-      if (status >= 500) console.error('[trustabl-console]', err)
+      if (status >= 500) console.error('[agent-dashboard]', err)
       return NextResponse.json({ error: err.message || 'Unexpected error' }, { status })
     }
   }

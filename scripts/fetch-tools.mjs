@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // Downloads the pinned Trustabl CLIs (tools.lock.json) into
-// $TRUSTABL_CONSOLE_HOME/bin/<tool>-<version>/ and verifies every archive's
+// $AGENT_DASHBOARD_HOME/bin/<tool>-<version>/ and verifies every archive's
 // SHA-256 before extracting it. The user never installs a CLI by hand.
 //
 //   node scripts/fetch-tools.mjs            fetch what is missing
@@ -18,7 +18,7 @@ import { fileURLToPath } from 'node:url'
 
 const root = path.dirname(path.dirname(fileURLToPath(import.meta.url)))
 const lock = JSON.parse(fs.readFileSync(path.join(root, 'tools.lock.json'), 'utf8'))
-const home = path.resolve(process.env.TRUSTABL_CONSOLE_HOME || path.join(os.homedir(), '.trustabl-console'))
+const home = path.resolve(process.env.AGENT_DASHBOARD_HOME || path.join(os.homedir(), '.agent-dashboard'))
 const binRoot = path.join(home, 'bin')
 const force = process.argv.includes('--force')
 
@@ -64,7 +64,7 @@ async function main() {
     const archive = tool.archive.replace('{version}', tool.version).replace('{os}', osName).replace('{arch}', arch)
     const expected = tool.sha256[archive]
     if (!expected) throw new Error(`tools.lock.json has no SHA-256 for ${archive}`)
-    const tmp = fs.mkdtempSync(path.join(os.tmpdir(), `trustabl-console-${name}-`))
+    const tmp = fs.mkdtempSync(path.join(os.tmpdir(), `agent-dashboard-${name}-`))
     const file = path.join(tmp, archive)
     const offlineDir = process.env.TRUSTABL_TOOLS_ARCHIVE_DIR
     if (offlineDir) {

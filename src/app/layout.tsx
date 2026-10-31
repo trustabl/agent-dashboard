@@ -9,7 +9,7 @@ import { ToastProvider } from '@/components/ui/ToastContext'
 const THEME_INIT_SCRIPT = `(function(){try{var t=localStorage.getItem('trustabl_theme');if(t!=='light'&&t!=='dark'){t=window.matchMedia&&window.matchMedia('(prefers-color-scheme: light)').matches?'light':'dark'}document.documentElement.setAttribute('data-theme',t)}catch(e){}})();`
 
 export const metadata: Metadata = {
-  title: 'Trustabl Console',
+  title: 'Agent Dashboard',
   description: 'Run Trustabl Forge, Analyzer and Probe on your own repos, locally.',
   robots: { index: false, follow: false },
 }
