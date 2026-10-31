@@ -1,13 +1,13 @@
 # Contributing to Agent Dashboard
 
-Thanks for helping. The Console is a thin, local UI over three open-source
+Thanks for helping. The dashboard is a thin, local UI over three open-source
 CLIs, so most changes are small: a parser, a view model, a screen.
 
 ## Ground rules
 
 - **Never invent data.** Every value on screen comes from real CLI output
   (`scan.json`, SARIF, `SKILL.md`, `forge check`, `probe.*.json`,
-  `network_policies.draft.yaml`) or from the Console's own run history. If the
+  `network_policies.draft.yaml`) or from the dashboard's own run history. If the
   design shows a field no pinned CLI produces, render
   `<Unavailable what="…" />` and open an issue on the CLI's repo.
 - **Don't change the CLIs from here.** `agent-reliability-analyzer` and
@@ -37,12 +37,12 @@ needed for Probe runs and the Probe end-to-end / parity tests.
 | --- | --- |
 | `make check` | eslint + `tsc --noEmit` + Vitest unit tests (`tests/unit`) |
 | `make e2e` | Playwright against a real build, real pinned CLIs and the fixture repos (`tests/fixtures/repos`); Probe cases are skipped when Docker is down |
-| `make parity` | Artifact parity: each tool run through the Console, then its recorded Copy CLI command in a plain shell; artifacts must match with timestamps masked |
+| `make parity` | Artifact parity: each tool run through the dashboard, then its recorded Copy CLI command in a plain shell; artifacts must match with timestamps masked |
 | `make secrets` | gitleaks (needs the `gitleaks` binary) |
 
 Parsers are tested against **recorded real CLI output** in
 `tests/fixtures/cli/`, and page components against view models recorded from
-the Console's own API in `tests/fixtures/views/`. When you bump a pinned CLI
+the dashboard's own API in `tests/fixtures/views/`. When you bump a pinned CLI
 version, re-record those files (see the README in each folder) instead of
 editing them by hand.
 
@@ -65,11 +65,11 @@ the same SHA-256 in `tools.lock.json`.
 - `src/app/api/` — route handlers (no auth)
 - `src/app/(console)/` — the four pages + repo detail
 - `src/components/ui/` — design-system components (Apache-2.0)
-- `src/components/console/` — Console building blocks (tables, pills, run dialog, Copy CLI)
+- `src/components/console/` — dashboard building blocks (tables, pills, run dialog, Copy CLI)
 
 ## Licenses
 
-The Console is Apache-2.0. Before vendoring anything, check its license is
+The dashboard is Apache-2.0. Before vendoring anything, check its license is
 compatible and note it next to the copy (as `src/components/ui/*` and
 `tests/fixtures/README.md` do). Fonts come from npm under OFL-1.1.
 
