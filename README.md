@@ -5,6 +5,8 @@ own repos from one local, single-user web UI. It wraps Trustabl's open-source
 **Analyzer**, **Forge** and **Probe**, so you don't have to install any of them.
 Policy and telemetry via OpenTelemetry are coming soon.
 
+![Overview page: two repos with their Forge, Analyzer and Probe status, open findings by severity, and the run log](docs/images/overview.png)
+
 | Page | Wraps | Commands |
 | --- | --- | --- |
 | Overview | all of the below | — |
