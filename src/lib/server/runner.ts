@@ -5,7 +5,7 @@ import { createHash, randomUUID } from 'node:crypto'
 import { db } from './db'
 import { paths, ensureDir } from './paths'
 import { headSha } from './git'
-import { toolInfo, type ToolName } from './tools'
+import { activeVersion, ensureInstalled, reportedVersion, type ToolName } from './tools'
 import type { RepoRow } from './repos'
 import { formatCommand, type CommandSpec } from '../shell'
 import { stripAnsi, tailLines } from '../text'
@@ -48,9 +48,13 @@ export interface FinalizeResult {
 type Finalizer = (ctx: FinalizeContext) => Promise<FinalizeResult>
 
 interface Live {
+  /** 0 while the run is still installing its CLI (no process yet). */
   pid: number
   cancelRequested: boolean
 }
+
+const OFFLINE_HINT = 'Offline? Run "make tools" with TRUSTABL_TOOLS_ARCHIVE_DIR set to a folder holding the release archives.'
+const CANCELLED = 'Cancelled from the Console.'
 
 type AfterRun = (run: RunRow) => Promise<void>
 type G = typeof globalThis & {
@@ -160,8 +164,8 @@ export async function startRun(input: StartRunInput): Promise<RunRow> {
   if (busy && input.repo) {
     throw new ConflictError(`A ${input.tool} run is already in progress for ${input.repo.name}. Cancel it or wait for it to finish.`)
   }
-  const info = await toolInfo(input.toolName)
-  if (!info.installed) throw new Error(`${input.toolName} ${info.pinned} is not installed. ${info.error ?? ''}`.trim())
+  // Fixed for this run: switching versions only affects runs started later.
+  const version = activeVersion(input.toolName)
 
   const id = newRunId()
   const dir = ensureDir(paths.run(id))
@@ -173,9 +177,50 @@ export async function startRun(input: StartRunInput): Promise<RunRow> {
     .prepare(`INSERT INTO runs (id, repo_id, tool, action, status, argv, command, cwd, tool_version, commit_sha, options, summary, started_at)
               VALUES (?, ?, ?, ?, 'running', ?, ?, ?, ?, ?, ?, '{}', ?)`)
     .run(id, input.repo?.id ?? null, input.tool, input.action, JSON.stringify([spec.bin, ...spec.args]), command,
-      spec.cwd ?? '', info.reported ?? info.pinned, commitSha, JSON.stringify(input.options), startedAt)
+      spec.cwd ?? '', version, commitSha, JSON.stringify(input.options), startedAt)
   fs.writeFileSync(path.join(dir, 'command.sh'), `#!/bin/sh\n# Reproduces Console run ${id}\n${command}\n`, { mode: 0o600 })
 
+  live.set(id, { pid: 0, cancelRequested: false })
+  void installThenSpawn(id, dir, input, spec, version)
+  return getRun(id)!
+}
+
+/** Installs the run's CLI version when it is not on disk (progress goes to the
+ *  run log), then starts the CLI. */
+async function installThenSpawn(id: string, dir: string, input: StartRunInput, spec: CommandSpec & { env?: Record<string, string> }, version: string) {
+  const log = path.join(dir, 'output.log')
+  // A cancel before the process exists closes the run at once (cancelRun);
+  // every await below re-checks that the run is still ours to start.
+  try {
+    await ensureInstalled(input.toolName, version, (line) => {
+      if (live.has(id)) fs.appendFileSync(log, `${line}\n`)
+    })
+  } catch (e) {
+    const err = e as Error & { step?: string }
+    if (live.has(id)) await closeUnspawned(id, 'failed', err.step === 'download' ? `${err.message} ${OFFLINE_HINT}` : err.message)
+    return
+  }
+  try {
+    // The binary this run spawns, not whatever is active by now.
+    const { reported } = await reportedVersion(input.toolName, spec.bin)
+    if (!live.has(id)) return
+    if (reported) db().prepare('UPDATE runs SET tool_version = ? WHERE id = ?').run(reported, id)
+    spawnRun(id, dir, input, spec)
+  } catch (e) {
+    await closeUnspawned(id, 'failed', `Could not start ${spec.bin}: ${(e as Error).message}`)
+  }
+}
+
+/** Ends a run that never got a process (install failed or cancelled). */
+async function closeUnspawned(id: string, status: RunStatus, error: string) {
+  live.delete(id)
+  db().prepare('UPDATE runs SET status = ?, error = ?, finished_at = ?, pid = NULL WHERE id = ?').run(status, error, Date.now(), id)
+  for (const cb of afterRunHooks.values()) {
+    try { await cb(getRun(id)!) } catch { /* hooks never fail a run */ }
+  }
+}
+
+function spawnRun(id: string, dir: string, input: StartRunInput, spec: CommandSpec & { env?: Record<string, string> }) {
   const out = fs.openSync(path.join(dir, 'stdout.log'), 'a')
   const err = fs.openSync(path.join(dir, 'stderr.log'), 'a')
   const combined = fs.openSync(path.join(dir, 'output.log'), 'a')
@@ -206,7 +251,9 @@ export async function startRun(input: StartRunInput): Promise<RunRow> {
   else child.stdin.end()
 
   if (child.pid) {
-    live.set(id, { pid: child.pid, cancelRequested: false })
+    const l = live.get(id)
+    if (l) l.pid = child.pid
+    else live.set(id, { pid: child.pid, cancelRequested: false })
     db().prepare('UPDATE runs SET pid = ? WHERE id = ?').run(child.pid, id)
   }
 
@@ -227,7 +274,7 @@ export async function startRun(input: StartRunInput): Promise<RunRow> {
     if (spawnError) {
       result = { status: 'failed', error: spawnError }
     } else if (ctx.cancelled) {
-      result = { status: 'cancelled', error: 'Cancelled from the Console.' }
+      result = { status: 'cancelled', error: CANCELLED }
     } else {
       const fin = finalizers.get(input.action)
       try {
@@ -249,8 +296,6 @@ export async function startRun(input: StartRunInput): Promise<RunRow> {
   }
   child.on('error', (e) => void finish(null, null, `Could not start ${spec.bin}: ${e.message}`))
   child.on('close', (code, signal) => void finish(code, signal))
-
-  return getRun(id)!
 }
 
 /** Named so a dev-server reload replaces a hook instead of adding a copy. */
@@ -262,6 +307,12 @@ export function cancelRun(id: string): boolean {
   const l = live.get(id)
   if (!l) return false
   l.cancelRequested = true
+  // Still installing: end the run now. The shared install keeps going for
+  // whoever else needs it, and installThenSpawn never spawns this one.
+  if (!l.pid) {
+    void closeUnspawned(id, 'cancelled', CANCELLED)
+    return true
+  }
   killGroup(l.pid, 'SIGTERM')
   setTimeout(() => {
     if (live.has(id)) killGroup(l.pid, 'SIGKILL')
@@ -270,6 +321,7 @@ export function cancelRun(id: string): boolean {
 }
 
 function killGroup(pid: number, sig: NodeJS.Signals) {
+  if (pid <= 0) return // never the server's own process group
   try {
     process.kill(-pid, sig)
   } catch {

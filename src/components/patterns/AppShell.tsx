@@ -9,6 +9,8 @@ import { useApi } from '@/lib/client/api'
 import { Pill } from '@/components/console/primitives'
 import { RunDialogProvider } from '@/components/console/RunDialog'
 import { shortSha } from '@/lib/text'
+import { toolBanner } from '@/lib/tool-versions'
+import type { ToolInfo } from '@/lib/types'
 
 // The design's App Shell: 240px rail with exactly four destinations, a 56px
 // topbar with the page title, repo count and current rules SHA. There is no
@@ -26,7 +28,7 @@ interface Status {
   repoCount: number
   rules: { sha: string } | null
   running: { id: string; tool: string }[]
-  tools: Record<string, { installed: boolean; pinned: string; reported?: string; error?: string }>
+  tools: Record<string, ToolInfo>
 }
 
 function titleFor(pathname: string): string {
@@ -41,8 +43,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const pathname = usePathname()
   const { theme, toggleTheme } = useTheme()
   const { data: status } = useApi<Status>('/api/status', { refreshInterval: 3000 })
-  const missing = status ? Object.values(status.tools).filter((t) => !t.installed) : []
-  const mismatch = status ? Object.values(status.tools).filter((t) => t.installed && t.reported && t.reported !== t.pinned) : []
+  const banner = status ? toolBanner(Object.values(status.tools)) : null
 
   return (
     <RunDialogProvider>
@@ -106,10 +107,9 @@ export function AppShell({ children }: { children: ReactNode }) {
               </button>
             </div>
           </header>
-          {(missing.length > 0 || mismatch.length > 0) && (
+          {banner && (
             <div role="alert" className="px-6 py-2 text-sm bg-(--color-danger-bg) text-(--color-danger-text) border-b border-(--color-danger-border)">
-              {missing.map((t) => `${'error' in t && t.error ? t.error : 'A pinned CLI is not installed.'}`).join(' ')}
-              {mismatch.map((t) => ` A CLI reports ${t.reported} but ${t.pinned} is pinned.`).join('')}
+              {banner}
             </div>
           )}
           <main id="main" tabIndex={-1} className="flex-1 overflow-y-auto overflow-x-hidden">

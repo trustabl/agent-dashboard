@@ -31,8 +31,9 @@ agent-dashboard/
 ├── Makefile                  ← run | dev | tools | test | e2e | parity | lint | typecheck | check | secrets | audit | wipe
 ├── tools.lock.json           ← pinned CLI versions + per-platform SHA-256
 ├── scripts/
-│   ├── run.sh                ← `make run`: Node bootstrap, npm ci, fetch CLIs, build-if-changed, serve
-│   ├── fetch-tools.mjs       ← download + SHA-256-verify the pinned CLIs
+│   ├── run.sh                ← `make run`: Node bootstrap, npm ci, build-if-changed, serve
+│   ├── fetch-tools.mjs       ← `make tools`: install the pinned CLIs ahead of their first run
+│   ├── lib/install-tool.mjs  ← download + SHA-256-verify + extract one CLI version (shared with the server)
 │   ├── source-sum.mjs        ← hash of build inputs (run.sh rebuilds only when it changes)
 │   └── wipe.sh               ← `make wipe`: delete all dashboard state
 ├── src/
@@ -49,7 +50,7 @@ agent-dashboard/
 │   └── components/
 │       ├── ui/               ← design-system components (Apache-2.0)
 │       ├── patterns/         ← AppShell, BrandMark, EmptyState
-│       └── console/          ← RunDialog, RunLog, RunHistory, CopyCli, ArtifactViewer, SkillReview, tables, cells
+│       └── console/          ← RunDialog, RunLog, RunHistory, CopyCli, ArtifactViewer, SkillReview, ToolVersion, tables, cells
 ├── tests/
 │   ├── unit/                 ← Vitest + Testing Library (lib/ and components/)
 │   ├── e2e/                  ← Playwright, incl. axe, keyboard and reflow specs
@@ -100,7 +101,7 @@ the CLIs as subprocesses.
              │              │              │ spawn (argv array, detached)
              ▼              ▼              ▼
    ┌───────────────┐ ┌─────────────┐ ┌──────────────────────────────┐
-   │ SQLite        │ │ Run folders │ │ Pinned CLIs (~/.agent-       │
+   │ SQLite        │ │ Run folders │ │ CLIs (~/.agent-              │
    │ console.db    │ │ runs/<id>/  │ │ dashboard/bin/)              │
    │ (node:sqlite) │ │ logs +      │ │  trustabl 0.1.15  scan/forge │
    └───────────────┘ │ artifacts   │ │  autofix  0.2.2   fix        │
@@ -118,8 +119,11 @@ the CLIs as subprocesses.
 
 Outbound network traffic is limited to these destinations:
 
-- **GitHub release downloads** of the pinned CLIs (`scripts/fetch-tools.mjs`).
-  There is no download when `TRUSTABL_TOOLS_ARCHIVE_DIR` is set.
+- **GitHub release downloads** of the CLIs (`scripts/lib/install-tool.mjs`):
+  a missing CLI on its first run, and from a tool page's versions dialog the
+  `releases/latest` lookup (**Check**) and the latest release's archive and
+  `checksums.txt` (**Install and use**). Nothing is fetched at start. Pinned
+  versions are not downloaded when `TRUSTABL_TOOLS_ARCHIVE_DIR` is set.
 - **nodejs.org**, only when `make run` has to bootstrap Node.
 - The CLIs' own **rules fetch** from the trustabl rules repository.
 - **Probe's LLM endpoint** (`--model` / `--llm-url`).
@@ -197,7 +201,11 @@ the message.
 
 | Method | Path | Handler → server code | Returns |
 |--------|------|------------------------|---------|
-| GET | `/api/status` | `tools.toolInfo`, `currentRules`, `listRepos`, `listRuns` | dashboard home, both CLIs (pinned, path, installed, reported version), rules SHA, repo count, running runs |
+| GET | `/api/status` | `tools.toolInfo`, `currentRules`, `listRepos`, `listRuns` | dashboard home, both CLIs (`ToolInfo`: pinned, active, path, installed, reported version, installed versions, latest, installs in progress), rules SHA, repo count, running runs |
+| GET | `/api/tools` | `tools.toolInfo` | `{ trustabl, autofix }` as `ToolInfo` |
+| POST | `/api/tools/[name]/check` | `tools.checkLatest` | `{ version, checkedAt }` of the latest GitHub release; 502 with the reason when unreachable or the tag is not `X.Y.Z` |
+| POST | `/api/tools/[name]/install` | `tools.ensureInstalled` → `setActiveVersion` | 202 at once; only the pinned or the checked latest version (else 400). Progress and result via `GET /api/tools` |
+| PUT | `/api/tools/[name]/active` | `tools.setActiveVersion` | Switch the version later runs use; 400 unless installed or pinned |
 | GET | `/api/overview` | `queries/views.overviewView` | Overview tiles, filter counts, one row per repo |
 | GET | `/api/repositories` | `repos.listRepos` or `views.reposWithFlags` (`?with=flags`) | Repos (+ has skill, Analyzer tool-file count) |
 | POST | `/api/repositories` | `repos.addRepo` | 201, the new repo (`{path, create}`) |
@@ -224,7 +232,7 @@ the message.
 | GET | `/api/probe` | `views.probeView` | Per-repo grant set, last run, egress, draft, flags |
 | GET | `/api/preflight` | `actions/probe.checkRunner`, `llmKeyEnv` | Runner reachable + fix, names of the LLM key variables that are set |
 | GET | `/api/rules` | `actions/forge.currentRules` | Current rules SHA setting |
-| POST | `/api/rules` | `ensureRulesStatus(0)` | 202. Re-resolves the SHA now. A change re-runs `forge check` everywhere. |
+| POST | `/api/rules` | `ensureRulesStatus(0, { installMissing: true })` | 202. Re-resolves the SHA now (installing trustabl first if needed). A change re-runs `forge check` everywhere. |
 
 `/api/rules` refreshes the current rules SHA. It is not a rule catalog: the
 open-source CLI has no catalog API.
@@ -298,9 +306,12 @@ default timeout and SIGKILL when it expires. It is used for:
 - `docker info` and `openshell sandbox list` (`actions/probe.checkRunner`);
 - `trustabl scan --help` (`actions/forge.policyCategories`).
 
-`tools.ts` resolves the pinned binary path from `tools.lock.json`. It caches
-the reported version per binary path. `TRUSTABL_BIN` / `AUTOFIX_BIN` override
-the path, for development only.
+`tools.ts` resolves the active version's binary path (pinned by default,
+§5.4), installs missing versions on demand and lists installed ones. It caches
+the reported version per binary path, only once the binary exists.
+`TRUSTABL_BIN` / `AUTOFIX_BIN` override the path, for development only.
+`actions/forge.policyCategories` caches per binary path and never caches an
+empty list.
 
 ### 4.8 View Models — `src/lib/server/queries/`
 
@@ -339,6 +350,8 @@ real CLI output.
   - `RunDialog`, the single "Run a local tool" dialog, with a focus trap;
   - `RunLog`, the live log through `EventSource`;
   - `RunHistory`, `CopyCli` and `ArtifactViewer`;
+  - `ToolVersion`, the CLI version badge in the Forge, Analyzer and Probe
+    headers, and its versions dialog (check, install, switch);
   - `SkillReview`, which shows the diff and asks to confirm before Forge writes;
   - table, cell, form and primitive helpers.
 
@@ -441,24 +454,52 @@ argv. Fixture values come from `$ENV_FIXTURES`, and a missing model comes from
 
 ### 5.4 Engine Binary Management
 
-- **`tools.lock.json`** pins each tool's version, release repo, archive name
-  template and the SHA-256 of every `darwin` / `linux` × `amd64` / `arm64`
-  archive. Version and hashes are bumped together (CONTRIBUTING.md, "Bumping a
-  pinned CLI").
-- **`scripts/fetch-tools.mjs`**:
+- **`tools.lock.json`** pins each tool's tested version, release repo, archive
+  name template and the SHA-256 of every `darwin` / `linux` × `amd64` /
+  `arm64` archive. Version and hashes are bumped together (CONTRIBUTING.md,
+  "Bumping a pinned CLI").
+- **`scripts/lib/install-tool.mjs`** (plain Node, used by `fetch-tools.mjs`
+  and the server) installs one version:
   - downloads
-    `https://github.com/<repo>/releases/download/v<version>/<archive>`, using
-    curl when present, else `fetch`;
-  - **refuses any archive whose SHA-256 differs**;
-  - extracts only the binary into `<home>/bin/<tool>-<version>/` and writes a
-    `SHA256` file next to it.
+    `https://github.com/<repo>/releases/download/v<version>/<archive>` into
+    `<home>/bin/.tmp-*`, with curl when present, else `fetch` — async, so the
+    server keeps answering during a download;
+  - takes the expected SHA-256 from `tools.lock.json` for the pinned version
+    (`lock`), or from that release's `checksums.txt` for any other version
+    (`upstream`: catches corrupt downloads, not a compromised release, so
+    such versions are marked "untested"), and **refuses any archive whose
+    SHA-256 differs**;
+  - extracts only the binary, writes `SHA256` (`<hash>  <archive>  <source>`)
+    and renames the folder to `<home>/bin/<tool>-<version>/`, so a half
+    install is never used. `boot()` deletes leftover `.tmp-*` folders.
 
-  `--force` re-downloads. Windows is not supported.
-- **Offline**: `TRUSTABL_TOOLS_ARCHIVE_DIR=<folder>` copies the archives from
-  that folder instead of downloading them. The same hashes are checked.
-- **Version check**: `/api/status` reports both the pinned version and the
-  version the binary itself reports. Each run row stores the reported version
-  (`tool_version`).
+  Versions must be plain `X.Y.Z`; the host is always github.com and the repo
+  comes from `tools.lock.json`. Windows is not supported.
+- **On demand**: nothing is fetched at start. `startRun` fixes the
+  run's version (the tool's active one), inserts the run, returns, then
+  `tools.ensureInstalled` installs that version if it is missing, writing its
+  progress into the run log, before the CLI is spawned. A failed install
+  fails the run (download failures add the offline hint); a cancel during
+  the install ends the run without spawning. One install job per
+  `tool@version` is shared by everyone waiting on it.
+- **Active version**: `settings['tool.<name>.active']`, default the pinned
+  version. The tool pages' version badge opens a dialog to **Check** GitHub's
+  latest release (`settings['tool.<name>.latest']`, never automatic),
+  **Install and use** it, or **Use** any installed version (or the pinned one,
+  installed on the next run; choosing it clears the setting, so a later pin
+  bump is followed). A non-pinned active version shows as
+  "untested". `binaryPath()` and Copy CLI follow the active version;
+  `TRUSTABL_BIN` / `AUTOFIX_BIN` override it.
+- **`scripts/fetch-tools.mjs`** (`make tools`) installs the pinned versions
+  ahead of time; `--force` re-downloads. CI, e2e setup and parity use it or
+  the same archives.
+- **Offline**: `TRUSTABL_TOOLS_ARCHIVE_DIR=<folder>` makes pinned installs copy
+  the archives from that folder instead of downloading them. The same hashes
+  are checked. Other versions always download.
+- **Version check**: `/api/status` reports the pinned, active and reported
+  versions. Each run row stores the reported version (`tool_version`); the
+  header banner flags a binary that reports another version than the active
+  one.
 
 ---
 
@@ -471,10 +512,10 @@ argv. Fixture values come from `$ENV_FIXTURES`, and a missing model comes from
 2. Node >= 22.13 on PATH?  no → download Node 22.22.0 + SHASUMS256.txt from
    nodejs.org, verify, unpack into <home>/node/
 3. npm ci when sha256(package-lock.json)+platform differs from node_modules/.lock-sum
-4. node scripts/fetch-tools.mjs            (§5.4)
-5. next build when scripts/source-sum.mjs differs from .next/.src-sum
-6. exec next start -H 127.0.0.1 -p ${AGENT_DASHBOARD_PORT:-4317}
-7. instrumentation.ts → boot()             (§4.2)
+4. next build when scripts/source-sum.mjs differs from .next/.src-sum
+5. exec next start -H 127.0.0.1 -p ${AGENT_DASHBOARD_PORT:-4317}
+6. instrumentation.ts → boot()             (§4.2)
+   The CLIs are not fetched: each installs on its first run (§5.4).
 ```
 
 ### 6.2 Add a Repo / Start Any Run
@@ -546,7 +587,8 @@ disconnect ends only the stream, never the run.
 ### 6.6 Rules SHA Refresh
 
 ```
-boot (if older than 6 h) or POST /api/rules (always)
+boot or the first trustabl install (if older than 6 h; skipped while trustabl
+is not installed) or POST /api/rules (always; installs trustabl if needed)
   → no rules-status run already running? start one (repo_id NULL)
   → finalizeRulesStatus: parse the stamp's rules SHA → settings['rules.current']
   → SHA changed since last time → recheckAllSkills('rules-update'):
@@ -723,7 +765,7 @@ reload replaces modules without losing them. Add new singletons the same way.
 |----------|--------|
 | `AGENT_DASHBOARD_HOME` | State directory (default `~/.agent-dashboard`) |
 | `AGENT_DASHBOARD_PORT` | Port for `make run` / `make dev` (default 4317) |
-| `TRUSTABL_TOOLS_ARCHIVE_DIR` | Install the CLIs from local archives (offline) |
+| `TRUSTABL_TOOLS_ARCHIVE_DIR` | Install the pinned CLIs from local archives (offline) |
 | `TRUSTABL_BIN`, `AUTOFIX_BIN` | Development override of the binary path |
 | `AGENT_DASHBOARD_NO_AUTORULES=1` | Skip the rules-SHA refresh at boot |
 | `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, `LLM_API_KEY` | Passed through to Probe, never stored |
@@ -781,7 +823,7 @@ The target is WCAG 2.1 AA in both themes:
 | Command | Suite | What it proves |
 |---------|-------|----------------|
 | `make test` | Vitest (`tests/unit/lib`, `tests/unit/components`) | Parsers and derivations against recorded real CLI output (`tests/fixtures/cli/`); page components against recorded view models (`tests/fixtures/views/`) |
-| `make e2e` | Playwright (`tests/e2e/`) | `tests/e2e/setup.mjs` makes a fresh home in `tests/.tmp/home` and git-initialised copies of `tests/fixtures/repos`. A real `next build` + `next start` on port 4318 runs with the real pinned CLIs. One spec per page, plus the a11y, keyboard and reflow specs. Probe cases skip when Docker is down. |
+| `make e2e` | Playwright (`tests/e2e/`) | `tests/e2e/setup.mjs` makes a fresh home in `tests/.tmp/home` and git-initialised copies of `tests/fixtures/repos`. A real `next build` + `next start` on port 4318 installs the real pinned CLIs on their first run from release archives cached in `tests/.tmp/archives` (`00-first-run` checks that install). `tool-version` switches versions with a fake build. One spec per page, plus the a11y, keyboard and reflow specs. Probe cases skip when Docker is down. |
 | `make parity` | Vitest (`tests/parity/parity.test.ts`) | Each tool runs through the dashboard's run engine, then the run's recorded command runs in a plain shell. The artifacts must match, with timestamps and Probe's harness ID masked. |
 | `make check` | lint + `tsc --noEmit` + unit | — |
 | `make secrets`, `make audit` | gitleaks, npm audit | §9 |
@@ -796,7 +838,7 @@ When a pinned CLI is bumped, re-record `tests/fixtures/cli/` and
 | `secrets` | gitleaks 8.18.4 over the full history |
 | `checks` | Node 22.22.0, `npm ci`, `make audit`, `make lint`, `make typecheck`, `make test` |
 | `e2e` | After `checks`: pre-pull `python:3-slim`, `make parity`, `make e2e`; upload the report on failure |
-| `one-command-start` | ubuntu + macOS. `make run` with a fresh home, then wait for `/api/status` and assert both CLIs are installed. Assert the server is not reachable on the LAN IP. `WIPE_YES=1 make wipe` must remove the home. |
+| `one-command-start` | ubuntu + macOS. `make run` with a fresh home, then wait for `/api/status` and assert neither CLI was downloaded (they install on first run). Assert the server is not reachable on the LAN IP. `WIPE_YES=1 make wipe` must remove the home. |
 
 ---
 

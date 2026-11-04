@@ -15,8 +15,9 @@ Policy and telemetry via OpenTelemetry are coming soon.
 | Probe | [agent-network-access-probe](https://github.com/trustabl/agent-network-access-probe) | `autofix fix` |
 
 - Runs on `127.0.0.1` only. There is no login and no user or org model.
-- Pinned CLIs: `trustabl` 0.1.15 and `autofix` 0.2.2. They are downloaded on
-  first start and their SHA-256 is checked (`tools.lock.json`).
+- Pinned CLIs: `trustabl` 0.1.15 and `autofix` 0.2.2. Each downloads the
+  first time you run it and its SHA-256 is checked (`tools.lock.json`). Newer
+  releases can be installed from the Forge, Analyzer and Probe pages.
 - Your source code stays on your machine. Probe sends tool source only to the
   LLM endpoint you configure.
 
@@ -61,7 +62,7 @@ All state is under `~/.agent-dashboard` (override with
 | --- | --- |
 | `console.db` | Repos, run history, findings (SQLite) |
 | `runs/<id>/` | Each run's command, output and artifacts (`scan.json`, `trustabl.sarif`, `SKILL.md`, `probe.*.json`, `network_policies.draft.yaml`) |
-| `bin/` | Pinned CLIs |
+| `bin/` | CLIs, one folder per installed version |
 | `cache/` | The CLIs' rule and Probe result caches (Linux/WSL) |
 
 ```sh

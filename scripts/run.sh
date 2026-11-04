@@ -54,8 +54,8 @@ if [ ! -f node_modules/.lock-sum ] || [ "$(cat node_modules/.lock-sum)" != "$LOC
   echo "$LOCK_SUM" > node_modules/.lock-sum
 fi
 
-say "Checking pinned CLIs"
-node scripts/fetch-tools.mjs
+# The CLIs are not fetched here: each one downloads on its first run (or run
+# "make tools" ahead of time, e.g. offline with TRUSTABL_TOOLS_ARCHIVE_DIR).
 
 # Build when anything that ships changed since the last build.
 SRC_SUM="$(node scripts/source-sum.mjs)"

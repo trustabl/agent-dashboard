@@ -23,7 +23,7 @@ CLIs, so most changes are small: a parser, a view model, a screen.
 ## Setup
 
 ```sh
-make run          # one-command start (installs deps + pinned CLIs, builds, serves)
+make run          # one-command start (installs deps, builds, serves; CLIs install on first run)
 make dev          # hot reload
 ```
 
@@ -47,8 +47,9 @@ version, re-record those files (see the README in each folder) instead of
 editing them by hand.
 
 Offline? Put the release archives in a folder and set
-`TRUSTABL_TOOLS_ARCHIVE_DIR`; `scripts/fetch-tools.mjs` verifies them against
-the same SHA-256 in `tools.lock.json`.
+`TRUSTABL_TOOLS_ARCHIVE_DIR`; `make tools` and first-run installs copy them
+from there and verify them against the same SHA-256 in `tools.lock.json`.
+`make e2e` caches the archives in `tests/.tmp/archives` on its first run.
 
 ## Bumping a pinned CLI
 

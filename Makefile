@@ -5,9 +5,9 @@ run:            ## Install what is missing, build, and serve on http://127.0.0.1
 	@./scripts/run.sh
 
 dev:            ## Next.js dev server (hot reload), same localhost-only binding
-	@node scripts/fetch-tools.mjs && npx next dev -H 127.0.0.1 -p $${AGENT_DASHBOARD_PORT:-4317}
+	@npx next dev -H 127.0.0.1 -p $${AGENT_DASHBOARD_PORT:-4317}
 
-tools:          ## Download/verify the pinned trustabl + autofix CLIs
+tools:          ## Download/verify the pinned trustabl + autofix CLIs ahead of their first run
 	@node scripts/fetch-tools.mjs
 
 test:           ## Unit tests (Vitest)

@@ -6,6 +6,7 @@ import { Button, Modal } from '@/components/ui'
 import { useToast } from '@/components/ui/ToastContext'
 import { EmptyState } from '@/components/patterns/EmptyState'
 import { ErrorBox, Kv, Mono, Note, PageHeader, Panel, Pill, RelTime, Subtext, Toolbar, ToolbarActions, Unavailable, AccGrid, type Tone } from '@/components/console/primitives'
+import { ToolVersion } from '@/components/console/ToolVersion'
 import { AccRow, DataTable, SearchField, SkeletonRows, Td } from '@/components/console/table'
 import { useRunDialog } from '@/components/console/RunDialog'
 import { CopyCli } from '@/components/console/CopyCli'
@@ -74,6 +75,7 @@ export function ForgeClient() {
     <>
       <PageHeader
         title="Forge"
+        badge={<ToolVersion tool="trustabl" />}
         lead="Pre-coding SKILL.md per repo. Forge does not score the code — it tells the model which reliability rules and which enriched OTel fields to emit before anything is written."
       />
       <Toolbar>

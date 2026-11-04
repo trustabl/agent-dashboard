@@ -2,7 +2,7 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { db, getSetting, setSetting } from '../db'
 import { paths, ensureDir, SKILL_REL_PATH } from '../paths'
-import { binaryPath } from '../tools'
+import { binaryPath, toolInfo } from '../tools'
 import {
   getRun, recordArtifact, registerFinalizer, startRun, updateRunSummary, listRuns,
   type FinalizeContext, type FinalizeResult, type StartRunInput,
@@ -207,8 +207,11 @@ export function currentRules(): { sha: string; checkedAt: number; runId: string 
   return getSetting('rules.current')
 }
 
-/** Refresh the rules SHA at most every `maxAgeMs` (startup + page loads). */
-export async function ensureRulesStatus(maxAgeMs = 6 * 60 * 60 * 1000): Promise<void> {
+/** Refresh the rules SHA at most every `maxAgeMs` (startup + page loads).
+ *  Skipped while trustabl is not installed, unless `installMissing` (the
+ *  Refresh rules button), so a fresh start downloads nothing. */
+export async function ensureRulesStatus(maxAgeMs = 6 * 60 * 60 * 1000, { installMissing = false } = {}): Promise<void> {
+  if (!installMissing && !(await toolInfo('trustabl')).installed) return
   const cur = currentRules()
   if (cur && Date.now() - cur.checkedAt < maxAgeMs) return
   const running = listRuns({ action: 'rules-status', status: 'running', limit: 1 })
@@ -220,17 +223,21 @@ export async function ensureRulesStatus(maxAgeMs = 6 * 60 * 60 * 1000): Promise<
   }
 }
 
-let categoryCache: string[] | null = null
+const categoryCache = new Map<string, string[]>()
 
 /** The --policy categories this trustabl build accepts, read from its own
  *  `trustabl scan --help` (the --detectors line lists them). */
 export async function policyCategories(): Promise<string[]> {
-  if (categoryCache) return categoryCache
+  const bin = binaryPath('trustabl')
+  const cached = categoryCache.get(bin)
+  if (cached) return cached
   const { execCapture } = await import('../exec')
-  const res = await execCapture(binaryPath('trustabl'), ['scan', '--help'], { timeoutMs: 15_000 })
+  const res = await execCapture(bin, ['scan', '--help'], { timeoutMs: 15_000 })
   const m = res.stdout.match(/--detectors string\s+comma-separated detector categories to run \(default: all\):\s*([^\n]+)/)
-  categoryCache = m ? m[1].split(',').map((s) => s.trim()).filter((s) => /^[a-z_]+$/.test(s)) : []
-  return categoryCache
+  const categories = m ? m[1].split(',').map((s) => s.trim()).filter((s) => /^[a-z_]+$/.test(s)) : []
+  // Not cached when empty: trustabl may simply not be installed yet.
+  if (categories.length) categoryCache.set(bin, categories)
+  return categories
 }
 
 /** Candidate vs. on-disk skill, for the confirm step. */

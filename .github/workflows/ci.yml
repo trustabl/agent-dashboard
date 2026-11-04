@@ -91,7 +91,7 @@ jobs:
             sleep 5
           done
           cat status.json
-          node -e 'const s=require("./status.json"); const t=Object.values(s.tools); if(!t.length||!t.every(x=>x.installed)) { console.error("pinned CLIs missing", s.tools); process.exit(1) }'
+          node -e 'const s=require("./status.json"); const t=Object.values(s.tools); if(!t.length||t.some(x=>x.installed)) { console.error("make run downloaded a CLI; it should wait for the first run", s.tools); process.exit(1) }'
       - name: Listens on localhost only
         run: |
           IP=$(node -e 'const o=require("os").networkInterfaces();for(const l of Object.values(o))for(const a of l)if(a.family==="IPv4"&&!a.internal){console.log(a.address);process.exit(0)}')
