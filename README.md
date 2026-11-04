@@ -1,3 +1,17 @@
+<p align="center">
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-Apache--2.0-blue" alt="License: Apache-2.0"></a>
+  <a href="https://github.com/trustabl/agent-dashboard/releases"><img src="https://img.shields.io/github/v/release/trustabl/agent-dashboard" alt="Latest release"></a>
+  <a href="https://github.com/trustabl/agent-dashboard/stargazers"><img src="https://img.shields.io/github/stars/trustabl/agent-dashboard?style=flat" alt="GitHub stars"></a>
+  <a href="https://github.com/trustabl/agent-dashboard/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/trustabl/agent-dashboard/ci.yml?branch=main&amp;label=CI" alt="CI"></a>
+  <a href="package.json"><img src="https://img.shields.io/badge/node-%E2%89%A522.13-339933" alt="Node.js 22.13 or newer"></a>
+  <a href="package.json"><img src="https://img.shields.io/github/package-json/dependency-version/trustabl/agent-dashboard/next?label=Next.js" alt="Next.js version"></a>
+  <br>
+  <a href="https://github.com/trustabl/agent-reliability-analyzer"><img src="https://img.shields.io/github/v/release/trustabl/agent-reliability-analyzer?label=analyzer%20%26%20forge" alt="Latest Analyzer and Forge release"></a>
+  <a href="https://github.com/trustabl/agent-network-access-probe"><img src="https://img.shields.io/github/v/release/trustabl/agent-network-access-probe?label=probe" alt="Latest Probe release"></a>
+  <a href="#first-run--5-minutes"><img src="https://img.shields.io/badge/platforms-macOS%20%C2%B7%20Linux%20%C2%B7%20WSL2-blue" alt="Platforms: macOS, Linux, WSL2"></a>
+  <a href="README.md"><img src="https://img.shields.io/badge/runs%20on-127.0.0.1%20only-blue" alt="Runs on 127.0.0.1 only"></a>
+</p>
+
 # Agent Dashboard
 
 Agent dashboard runs reliability scans, skills and network access probes on your
@@ -22,8 +36,6 @@ Policy and telemetry via OpenTelemetry are coming soon.
   LLM endpoint you configure.
 
 ## First run (≈ 5 minutes)
-
-[![CI](https://github.com/trustabl/agent-dashboard/actions/workflows/ci.yml/badge.svg)](https://github.com/trustabl/agent-dashboard/actions/workflows/ci.yml)
 
 Requirements: macOS, Linux or WSL2, with `git`, `curl`, `tar` and `make`.
 You need Node.js 22.13 or newer; if you don't have it, `make run` installs a
