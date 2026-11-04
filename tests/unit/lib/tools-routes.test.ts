@@ -44,7 +44,7 @@ test('GET lists both tools', async () => {
   expect(res.status).toBe(200)
   const data = await res.json()
   expect(Object.keys(data).sort()).toEqual(['autofix', 'trustabl'])
-  expect(data.autofix).toMatchObject({ pinned: '0.2.2', active: '0.2.2', installed: false })
+  expect(data.autofix).toMatchObject({ pinned: '0.5.0', active: '0.5.0', installed: false })
 })
 
 test('unknown tool is 404', async () => {
@@ -54,10 +54,10 @@ test('unknown tool is 404', async () => {
 })
 
 test('check stores the latest version', async () => {
-  __setLatestVersionForTests(async () => '0.5.0')
+  __setLatestVersionForTests(async () => '0.6.0')
   const res = await check(empty('/api/tools/autofix/check'), ctx('autofix'))
   expect(res.status).toBe(200)
-  expect((await res.json()).version).toBe('0.5.0')
+  expect((await res.json()).version).toBe('0.6.0')
 })
 
 test('check does not store a bad tag', async () => {
@@ -71,33 +71,33 @@ test('check does not store a bad tag', async () => {
 test('install accepts only pinned or latest', async () => {
   const bad = await install(body('/api/tools/autofix/install', { version: '0.4.0' }), ctx('autofix'))
   expect(bad.status).toBe(400)
-  const ok = await install(body('/api/tools/autofix/install', { version: '0.2.2' }), ctx('autofix'))
+  const ok = await install(body('/api/tools/autofix/install', { version: '0.5.0' }), ctx('autofix'))
   expect(ok.status).toBe(202)
-  await ensureInstalled('autofix', '0.2.2')
+  await ensureInstalled('autofix', '0.5.0')
 })
 
 test('install of latest activates it', async () => {
-  setSetting('tool.autofix.latest', { version: '0.5.0', checkedAt: Date.now() })
-  const res = await install(body('/api/tools/autofix/install', { version: '0.5.0' }), ctx('autofix'))
+  setSetting('tool.autofix.latest', { version: '0.6.0', checkedAt: Date.now() })
+  const res = await install(body('/api/tools/autofix/install', { version: '0.6.0' }), ctx('autofix'))
   expect(res.status).toBe(202)
-  await ensureInstalled('autofix', '0.5.0')
+  await ensureInstalled('autofix', '0.6.0')
   await new Promise((r) => setTimeout(r, 0))
-  expect(activeVersion('autofix')).toBe('0.5.0')
+  expect(activeVersion('autofix')).toBe('0.6.0')
 })
 
 test('active PUT switches to an installed version', async () => {
-  await ensureInstalled('autofix', '0.2.2')
-  setSetting('tool.autofix.latest', { version: '0.5.0', checkedAt: Date.now() })
   await ensureInstalled('autofix', '0.5.0')
-  const res = await setActive(body('/api/tools/autofix/active', { version: '0.5.0' }, 'PUT'), ctx('autofix'))
+  setSetting('tool.autofix.latest', { version: '0.6.0', checkedAt: Date.now() })
+  await ensureInstalled('autofix', '0.6.0')
+  const res = await setActive(body('/api/tools/autofix/active', { version: '0.6.0' }, 'PUT'), ctx('autofix'))
   expect(res.status).toBe(200)
-  expect(activeVersion('autofix')).toBe('0.5.0')
+  expect(activeVersion('autofix')).toBe('0.6.0')
 })
 
 test('active PUT 400 for a version not installed', async () => {
-  const res = await setActive(body('/api/tools/autofix/active', { version: '0.5.0' }, 'PUT'), ctx('autofix'))
+  const res = await setActive(body('/api/tools/autofix/active', { version: '0.6.0' }, 'PUT'), ctx('autofix'))
   expect(res.status).toBe(400)
-  expect(activeVersion('autofix')).toBe('0.2.2')
+  expect(activeVersion('autofix')).toBe('0.5.0')
 })
 
 test('a first trustabl install from the dialog resolves the rules SHA', async () => {

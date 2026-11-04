@@ -4,7 +4,7 @@ import path from 'node:path'
 import { createHash } from 'node:crypto'
 import { execFileSync } from 'node:child_process'
 import {
-  InstallError, archiveName, download, installTool, latestVersion, parseChecksums, parseLatestTag, platform, type LockEntry,
+  InstallError, archiveName, curlArgs, download, installTool, latestVersion, parseChecksums, parseLatestTag, platform, type LockEntry,
 } from '../../../scripts/lib/install-tool.mjs'
 
 // A tiny release archive holding one executable, built once for the suite.
@@ -180,4 +180,13 @@ test('download does not block the event loop', async () => {
   await download(`file://${archiveFile}`, dest)
   expect(ticked).toBe(true)
   expect(fs.readFileSync(dest)).toEqual(fs.readFileSync(archiveFile))
+})
+
+test('curlArgs retries a slow connection by default, fails fast when asked', () => {
+  const defaults = curlArgs('https://x/a', '/tmp/a')
+  expect(defaults).toEqual(expect.arrayContaining(['--retry', '3', '--connect-timeout', '20']))
+  expect(defaults.slice(-3)).toEqual(['-o', '/tmp/a', 'https://x/a'])
+  // `make run` must not hold the start for ~90 s when GitHub's packets are dropped.
+  const fast = curlArgs('https://x/a', '/tmp/a', { connectTimeout: 5, retries: 1 })
+  expect(fast).toEqual(expect.arrayContaining(['--retry', '1', '--connect-timeout', '5']))
 })

@@ -42,7 +42,15 @@ export interface InstallResult {
 
 export function platform(): Platform
 export function archiveName(entry: LockEntry, version: string, plat?: Platform): string
-export function download(url: string, dest: string): Promise<void>
+export interface DownloadOptions {
+  /** Seconds curl waits for a connection (default 20). */
+  connectTimeout?: number
+  /** curl retries after a failed attempt (default 3). */
+  retries?: number
+}
+
+export function curlArgs(url: string, dest: string, opts?: DownloadOptions): string[]
+export function download(url: string, dest: string, opts?: DownloadOptions): Promise<void>
 export function parseChecksums(text: string): Map<string, string>
 export function parseLatestTag(finalUrl: string): string
 export function latestVersion(repo: string, opts?: { resolve?: (url: string) => Promise<string> }): Promise<string>

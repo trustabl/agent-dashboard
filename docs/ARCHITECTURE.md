@@ -31,8 +31,8 @@ agent-dashboard/
 ├── Makefile                  ← run | dev | tools | test | e2e | parity | lint | typecheck | check | secrets | audit | wipe
 ├── tools.lock.json           ← pinned CLI versions + per-platform SHA-256
 ├── scripts/
-│   ├── run.sh                ← `make run`: Node bootstrap, npm ci, build-if-changed, serve
-│   ├── fetch-tools.mjs       ← `make tools`: install the pinned CLIs ahead of their first run
+│   ├── run.sh                ← `make run`: Node bootstrap, npm ci, pinned CLIs, build-if-changed, serve
+│   ├── fetch-tools.mjs       ← `make run` / `make tools`: install the missing pinned CLIs
 │   ├── lib/install-tool.mjs  ← download + SHA-256-verify + extract one CLI version (shared with the server)
 │   ├── source-sum.mjs        ← hash of build inputs (run.sh rebuilds only when it changes)
 │   └── wipe.sh               ← `make wipe`: delete all dashboard state
@@ -104,7 +104,7 @@ the CLIs as subprocesses.
    │ SQLite        │ │ Run folders │ │ CLIs (~/.agent-              │
    │ console.db    │ │ runs/<id>/  │ │ dashboard/bin/)              │
    │ (node:sqlite) │ │ logs +      │ │  trustabl 0.1.15  scan/forge │
-   └───────────────┘ │ artifacts   │ │  autofix  0.2.2   fix        │
+   └───────────────┘ │ artifacts   │ │  autofix  0.5.0   fix        │
                      └─────────────┘ └──────┬───────────────┬───────┘
                                             │               │
                          reads local repos ◄┘               ▼
@@ -120,9 +120,10 @@ the CLIs as subprocesses.
 Outbound network traffic is limited to these destinations:
 
 - **GitHub release downloads** of the CLIs (`scripts/lib/install-tool.mjs`):
-  a missing CLI on its first run, and from a tool page's versions dialog the
+  the pinned CLIs during `make run`, a missing CLI on its first run (the
+  fallback, and `make dev`), and from a tool page's versions dialog the
   `releases/latest` lookup (**Check**) and the latest release's archive and
-  `checksums.txt` (**Install and use**). Nothing is fetched at start. Pinned
+  `checksums.txt` (**Install and use**). Pinned
   versions are not downloaded when `TRUSTABL_TOOLS_ARCHIVE_DIR` is set.
 - **nodejs.org**, only when `make run` has to bootstrap Node.
 - The CLIs' own **rules fetch** from the trustabl rules repository.
@@ -408,7 +409,7 @@ argv array, never through a shell. The contract with each CLI is:
 ### 5.3 Probe Engine (`autofix` binary)
 
 **Source**: `github.com/trustabl/agent-network-access-probe` (open source, do not modify)
-**Pinned**: 0.2.2 (`tools.lock.json`)
+**Pinned**: 0.5.0 (`tools.lock.json`)
 
 Every Probe run is a class run inside a sandbox. That way the user's repo is
 never written to:
@@ -475,7 +476,8 @@ argv. Fixture values come from `$ENV_FIXTURES`, and a missing model comes from
 
   Versions must be plain `X.Y.Z`; the host is always github.com and the repo
   comes from `tools.lock.json`. Windows is not supported.
-- **On demand**: nothing is fetched at start. `startRun` fixes the
+- **On demand**: the server fetches nothing at boot (`make run` installs
+  the pinned versions before it starts). `startRun` fixes the
   run's version (the tool's active one), inserts the run, returns, then
   `tools.ensureInstalled` installs that version if it is missing, writing its
   progress into the run log, before the CLI is spawned. A failed install
@@ -490,9 +492,9 @@ argv. Fixture values come from `$ENV_FIXTURES`, and a missing model comes from
   bump is followed). A non-pinned active version shows as
   "untested". `binaryPath()` and Copy CLI follow the active version;
   `TRUSTABL_BIN` / `AUTOFIX_BIN` override it.
-- **`scripts/fetch-tools.mjs`** (`make tools`) installs the pinned versions
-  ahead of time; `--force` re-downloads. CI, e2e setup and parity use it or
-  the same archives.
+- **`scripts/fetch-tools.mjs`** (`make run` on every start, and `make tools`)
+  installs the pinned versions that are missing; `--force` re-downloads. CI,
+  e2e setup and parity use it or the same archives.
 - **Offline**: `TRUSTABL_TOOLS_ARCHIVE_DIR=<folder>` makes pinned installs copy
   the archives from that folder instead of downloading them. The same hashes
   are checked. Other versions always download.
@@ -512,10 +514,12 @@ argv. Fixture values come from `$ENV_FIXTURES`, and a missing model comes from
 2. Node >= 22.13 on PATH?  no → download Node 22.22.0 + SHASUMS256.txt from
    nodejs.org, verify, unpack into <home>/node/
 3. npm ci when sha256(package-lock.json)+platform differs from node_modules/.lock-sum
-4. next build when scripts/source-sum.mjs differs from .next/.src-sum
-5. exec next start -H 127.0.0.1 -p ${AGENT_DASHBOARD_PORT:-4317}
-6. instrumentation.ts → boot()             (§4.2)
-   The CLIs are not fetched: each installs on its first run (§5.4).
+4. node scripts/fetch-tools.mjs: install the missing pinned CLIs (SHA-256 vs
+   tools.lock.json). On failure, warn and continue: each CLI then installs on
+   its first run (§5.4)
+5. next build when scripts/source-sum.mjs differs from .next/.src-sum
+6. exec next start -H 127.0.0.1 -p ${AGENT_DASHBOARD_PORT:-4317}
+7. instrumentation.ts → boot()             (§4.2)
 ```
 
 ### 6.2 Add a Repo / Start Any Run
@@ -838,7 +842,7 @@ When a pinned CLI is bumped, re-record `tests/fixtures/cli/` and
 | `secrets` | gitleaks 8.18.4 over the full history |
 | `checks` | Node 22.22.0, `npm ci`, `make audit`, `make lint`, `make typecheck`, `make test` |
 | `e2e` | After `checks`: pre-pull `python:3-slim`, `make parity`, `make e2e`; upload the report on failure |
-| `one-command-start` | ubuntu + macOS. `make run` with a fresh home, then wait for `/api/status` and assert neither CLI was downloaded (they install on first run). Assert the server is not reachable on the LAN IP. `WIPE_YES=1 make wipe` must remove the home. |
+| `one-command-start` | ubuntu + macOS. `make run` with a fresh home, then wait for `/api/status` and assert both pinned CLIs are installed, report the pinned version and were verified against `tools.lock.json` (`hashSource: lock`). Assert the server is not reachable on the LAN IP. `WIPE_YES=1 make wipe` must remove the home. |
 
 ---
 

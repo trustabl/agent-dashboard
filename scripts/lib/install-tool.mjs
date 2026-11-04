@@ -1,7 +1,7 @@
 // Downloads, verifies and installs one release of a Trustabl CLI into
 // <home>/bin/<name>-<version>/. Shared by scripts/fetch-tools.mjs (pinned
-// versions, `make tools`) and the dashboard server (first-run installs and
-// upgrades). No dashboard imports: plain Node only.
+// versions, `make run` and `make tools`) and the dashboard server (first-run
+// installs and upgrades). No dashboard imports: plain Node only.
 //
 // Hashes come from tools.lock.json for the pinned version ('lock'), or from the
 // release's own checksums.txt for any other version ('upstream'). An archive
@@ -50,13 +50,17 @@ function hasCurl() {
   return curl
 }
 
-export async function download(url, dest) {
+/** Give up on a stalled transfer (under 1 KB/s for a minute) instead of
+ *  holding the install, and every run waiting on it, forever. */
+export function curlArgs(url, dest, { connectTimeout = 20, retries = 3 } = {}) {
+  return ['-fsSL', '--retry', String(retries), '--connect-timeout', String(connectTimeout), '--speed-limit', '1024', '--speed-time', '60', '-o', dest, url]
+}
+
+export async function download(url, dest, opts) {
   // curl honours HTTPS_PROXY and system CA stores; Node's fetch does not
   // always, so prefer it when present.
   if (hasCurl()) {
-    // Give up on a stalled transfer (under 1 KB/s for a minute) instead of
-    // holding the install, and every run waiting on it, forever.
-    await run('curl', ['-fsSL', '--retry', '3', '--connect-timeout', '20', '--speed-limit', '1024', '--speed-time', '60', '-o', dest, url])
+    await run('curl', curlArgs(url, dest, opts))
     return
   }
   const res = await fetch(url, { redirect: 'follow', signal: AbortSignal.timeout(15 * 60_000) })

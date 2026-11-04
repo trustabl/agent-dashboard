@@ -2,7 +2,7 @@
 # One-command start for Agent Dashboard (what `make run` calls).
 #   1. use Node >= 22.13 from PATH, or install a private copy under the Console home
 #   2. install npm dependencies (npm ci) when package-lock.json changed
-#   3. fetch the pinned trustabl + autofix CLIs (SHA-256 verified)
+#   3. install the pinned trustabl + autofix CLIs that are missing (not fatal when offline)
 #   4. build when sources changed, then serve on http://127.0.0.1:4317 (localhost only)
 set -euo pipefail
 
@@ -54,8 +54,10 @@ if [ ! -f node_modules/.lock-sum ] || [ "$(cat node_modules/.lock-sum)" != "$LOC
   echo "$LOCK_SUM" > node_modules/.lock-sum
 fi
 
-# The CLIs are not fetched here: each one downloads on its first run (or run
-# "make tools" ahead of time, e.g. offline with TRUSTABL_TOOLS_ARCHIVE_DIR).
+# Pinned CLIs (tools.lock.json): installs only what is missing, so a restart
+# downloads nothing. Not fatal: offline, each CLI installs on its first run.
+say "Checking pinned CLIs"
+node scripts/fetch-tools.mjs --fail-fast || say "Could not install the pinned CLIs; each one will install on its first run"
 
 # Build when anything that ships changed since the last build.
 SRC_SUM="$(node scripts/source-sum.mjs)"

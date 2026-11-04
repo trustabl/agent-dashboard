@@ -13,13 +13,13 @@ test.beforeAll(() => {
 })
 
 test.afterAll(async ({ request }) => {
-  await request.put('/api/tools/autofix/active', { data: { version: '0.2.2' } })
+  await request.put('/api/tools/autofix/active', { data: { version: '0.5.0' } })
   fs.rmSync(FAKE, { recursive: true, force: true })
 })
 
 test('switch autofix versions from the Probe page', async ({ page, request }) => {
   await page.goto('/probe')
-  await page.getByRole('button', { name: /^autofix 0\.2\.2/ }).click()
+  await page.getByRole('button', { name: /^autofix 0\.5\.0/ }).click()
   const dialog = page.getByRole('dialog', { name: 'autofix versions' })
   await expect(dialog).toBeVisible()
   await dialog.getByRole('button', { name: 'Use autofix 9.9.9' }).click()
@@ -30,6 +30,6 @@ test('switch autofix versions from the Probe page', async ({ page, request }) =>
   })).json()
   expect(preview.command).toContain('/bin/autofix-9.9.9/autofix')
 
-  await dialog.getByRole('button', { name: 'Use autofix 0.2.2' }).click()
-  await expect(page.getByRole('button', { name: /^autofix 0\.2\.2/ })).toBeVisible()
+  await dialog.getByRole('button', { name: 'Use autofix 0.5.0' }).click()
+  await expect(page.getByRole('button', { name: /^autofix 0\.5\.0/ })).toBeVisible()
 })
