@@ -1,8 +1,31 @@
 // Shared types between the server and the browser. CLI output shapes mirror
-// trustabl 0.1.15 (internal/models) and autofix 0.2.2 (internal/profile,
+// trustabl 0.1.15 (internal/models) and autofix 0.5.0 (internal/profile,
 // internal/findings) — only the fields the Console reads are typed.
 
 export type ConsoleTool = 'forge' | 'analyzer' | 'probe'
+export type ToolName = 'trustabl' | 'autofix'
+/** Where an installed CLI's SHA-256 came from: tools.lock.json (the pinned
+ *  version) or the release's own checksums.txt (any other version). */
+export type HashSource = 'lock' | 'upstream'
+
+export interface ToolInfo {
+  name: ToolName
+  pinned: string
+  /** The version runs use: pinned unless switched in the versions dialog. */
+  active: string
+  /** Binary of the active version (or the TRUSTABL_BIN / AUTOFIX_BIN override). */
+  path: string
+  installed: boolean
+  /** Version the binary reports (`trustabl version` / `autofix version`). */
+  reported?: string
+  error?: string
+  override: boolean
+  /** Newest first. hashSource is null when the folder has no SHA256 file. */
+  installedVersions: { version: string; hashSource: HashSource | null }[]
+  latest?: { version: string; checkedAt: number }
+  installing: { version: string; lines: string[] }[]
+  lastInstall?: { version: string; ok: boolean; error?: string; finishedAt: number }
+}
 export type RunStatus = 'running' | 'succeeded' | 'failed' | 'cancelled' | 'interrupted'
 
 export interface RunRow {

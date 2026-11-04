@@ -91,7 +91,12 @@ jobs:
             sleep 5
           done
           cat status.json
-          node -e 'const s=require("./status.json"); const t=Object.values(s.tools); if(!t.length||!t.every(x=>x.installed)) { console.error("pinned CLIs missing", s.tools); process.exit(1) }'
+          node -e 'const s=require("./status.json"); const t=Object.values(s.tools); if(!t.length||!t.every(x=>x.installed)) { console.error("make run did not install the pinned CLIs", s.tools); process.exit(1) }'
+      - name: make run installed each pinned CLI from its GitHub release
+        run: |
+          curl -fsS http://127.0.0.1:4317/api/tools > tools.json
+          cat tools.json
+          node -e 'const t=Object.values(require("./tools.json")); const bad=t.filter((x)=>!x.installed||x.reported!==x.pinned||x.installedVersions[0]?.hashSource!=="lock"); if(bad.length) { console.error("pinned CLI did not install and verify", bad); process.exit(1) }'
       - name: Listens on localhost only
         run: |
           IP=$(node -e 'const o=require("os").networkInterfaces();for(const l of Object.values(o))for(const a of l)if(a.family==="IPv4"&&!a.internal){console.log(a.address);process.exit(0)}')

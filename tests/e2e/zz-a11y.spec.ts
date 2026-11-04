@@ -81,11 +81,18 @@ for (const theme of ['dark', 'light'] as const) {
       await page.keyboard.press('Escape')
     }
 
+    // CLI versions dialog from the page header.
+    await page.getByRole('button', { name: /^autofix / }).click()
+    await expect(page.getByRole('dialog', { name: 'autofix versions' })).toBeVisible()
+    await audit(page, `probe versions dialog (${theme})`)
+    await page.keyboard.press('Escape')
+
     await page.goto(`/repos/${acme.id}`)
     await expect(page.getByRole('heading', { name: 'acme-support', level: 1 })).toBeVisible()
     await audit(page, `repo detail (${theme})`)
-    // Full run output modal from the run log.
-    await page.getByRole('button', { name: 'Log', exact: true }).first().click()
+    // Full run output modal from the run log. A scan row: the newest run may
+    // be a SARIF import, which has no CLI output to show.
+    await page.getByRole('row').filter({ hasText: '· scan' }).first().getByRole('button', { name: 'Log', exact: true }).click()
     await expect(page.getByTestId('run-log').first()).toBeVisible()
     await audit(page, `run log modal (${theme})`)
     await page.keyboard.press('Escape')

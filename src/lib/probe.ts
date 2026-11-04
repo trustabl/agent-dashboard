@@ -1,7 +1,7 @@
 import { parse as parseYaml } from 'yaml'
 import type { Endpoint, ProbeFindings, ProbeProfile } from './types'
 
-// Interprets what `autofix fix` (Trustabl Probe 0.2.2) writes:
+// Interprets what `autofix fix` (Trustabl Probe 0.5.0) writes:
 // probe.profile.json, probe.findings.json and network_policies.draft.yaml.
 
 export type ProbeFlag = 'egress.denied_class' | 'egress.broad_cidr' | 'egress.not_in_org_allow'

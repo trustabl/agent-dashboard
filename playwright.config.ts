@@ -3,8 +3,9 @@ import path from 'node:path'
 
 // E2E: builds and starts the real Console on a private port with a throwaway
 // home (tests/.tmp/home), against fixture repos copied to tests/.tmp/repos.
-// The pinned CLIs are real; set TRUSTABL_TOOLS_ARCHIVE_DIR to install them
-// from local archives when GitHub is unreachable.
+// The pinned CLIs are real. setup.mjs caches their release archives in
+// tests/.tmp/archives (or uses TRUSTABL_TOOLS_ARCHIVE_DIR when set) and the
+// server installs each CLI from there on its first run, as a user's would.
 const PORT = Number(process.env.E2E_PORT ?? 4318)
 export const E2E_HOME = path.resolve(__dirname, 'tests/.tmp/home')
 
@@ -29,6 +30,7 @@ export default defineConfig({
     timeout: 240_000,
     env: {
       AGENT_DASHBOARD_HOME: E2E_HOME,
+      TRUSTABL_TOOLS_ARCHIVE_DIR: process.env.TRUSTABL_TOOLS_ARCHIVE_DIR ?? path.resolve(__dirname, 'tests/.tmp/archives'),
       NODE_OPTIONS: '--disable-warning=ExperimentalWarning',
       NEXT_TELEMETRY_DISABLED: '1',
     },

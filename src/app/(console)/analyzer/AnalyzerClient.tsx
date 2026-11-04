@@ -7,6 +7,7 @@ import { EmptyState } from '@/components/patterns/EmptyState'
 import {
   Conf, ErrorBox, Kpi, KpiGrid, Mono, Note, PageHeader, Panel, Pill, RelTime, Sev, SevRow, Spark, Subtext, Toolbar, ToolbarActions, Unavailable,
 } from '@/components/console/primitives'
+import { ToolVersion } from '@/components/console/ToolVersion'
 import { AccRow, Chips, DataTable, PageTabs, SearchField, SkeletonRows, Td } from '@/components/console/table'
 import { useRunDialog } from '@/components/console/RunDialog'
 import { CopyCli } from '@/components/console/CopyCli'
@@ -72,6 +73,7 @@ export function AnalyzerClient() {
     <>
       <PageHeader
         title="Analyzer"
+        badge={<ToolVersion tool="trustabl" />}
         lead="Default is per repo: severity counts and scan history. Open findings are ranked severity then confidence. Status is a rescan fingerprint — gone is resolved, still present is open, new is introduced."
       />
       <KpiGrid>

@@ -109,6 +109,10 @@ export function setSetting(key: string, value: unknown): void {
     .run(key, JSON.stringify(value))
 }
 
+export function deleteSetting(key: string): void {
+  db().prepare('DELETE FROM settings WHERE key = ?').run(key)
+}
+
 /** Test hook: close and forget the connection (a new AGENT_DASHBOARD_HOME takes effect). */
 export function resetDbForTests(): void {
   const g = globalThis as GlobalWithDb

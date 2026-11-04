@@ -7,6 +7,6 @@ export const GET = handler(async () => json({ rules: currentRules() ?? null }))
 
 /** Re-resolve the rules SHA now; a change re-runs forge check on every skill. */
 export const POST = handler(async () => {
-  await ensureRulesStatus(0)
+  await ensureRulesStatus(0, { installMissing: true })
   return json({ ok: true }, { status: 202 })
 })

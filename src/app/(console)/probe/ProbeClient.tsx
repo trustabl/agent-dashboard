@@ -6,6 +6,7 @@ import { ShieldCheck } from 'lucide-react'
 import { Button } from '@/components/ui'
 import { EmptyState } from '@/components/patterns/EmptyState'
 import { AccGrid, ErrorBox, Kv, Mono, Note, PageHeader, Panel, Pill, RelTime, Subtext, Toolbar, ToolbarActions, Unavailable, type Tone } from '@/components/console/primitives'
+import { ToolVersion } from '@/components/console/ToolVersion'
 import { AccRow, DataTable, SearchField, SkeletonRows, Td } from '@/components/console/table'
 import { useRunDialog, type OpenRunArgs } from '@/components/console/RunDialog'
 import { CopyCli } from '@/components/console/CopyCli'
@@ -46,7 +47,7 @@ export function ProbeClient() {
     <>
       <PageHeader
         title="Probe"
-        badge={<Pill>was autofix</Pill>}
+        badge={<><Pill>was autofix</Pill><ToolVersion tool="autofix" /></>}
         lead={<>Harness-run the grant set, record network egress, emit an unsigned OpenShell <Mono>network_policies.draft.yaml</Mono>. Secondary session findings stay on the report; they are not the product sentence.</>}
       />
       <Toolbar>
