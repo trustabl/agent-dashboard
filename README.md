@@ -25,7 +25,7 @@ Policy and telemetry via OpenTelemetry are coming soon.
 | --- | --- | --- |
 | Overview | all of the below | — |
 | Forge | [agent-reliability-analyzer](https://github.com/trustabl/agent-reliability-analyzer) | `trustabl forge`, `trustabl forge check` |
-| Analyzer | agent-reliability-analyzer | `trustabl scan` |
+| Analyzer | [agent-reliability-analyzer](https://github.com/trustabl/agent-reliability-analyzer) | `trustabl scan` |
 | Probe | [agent-network-access-probe](https://github.com/trustabl/agent-network-access-probe) | `autofix fix` |
 
 - Runs on `127.0.0.1` only. There is no login and no user or org model.
