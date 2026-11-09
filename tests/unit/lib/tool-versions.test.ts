@@ -38,7 +38,7 @@ describe('toolBanner', () => {
     expect(toolBanner([info({ active: '0.5.0', reported: '0.5.0' })])).toBeNull()
   })
   test('flags a binary that reports another version than the active one', () => {
-    expect(toolBanner([info({ reported: '0.2.3' }), info({ name: 'trustabl', pinned: '0.1.15', active: '0.1.15', reported: '0.1.15' })]))
+    expect(toolBanner([info({ reported: '0.2.3' }), info({ name: 'trustabl', pinned: '0.1.16', active: '0.1.16', reported: '0.1.16' })]))
       .toBe('A CLI reports 0.2.3 but 0.2.2 is active.')
   })
 })

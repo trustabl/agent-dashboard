@@ -17,12 +17,12 @@ test('first run installs the pinned CLI, then runs it', async ({ request }) => {
     run = ((await (await request.get('/api/runs?tool=forge')).json()).runs as NonNullable<typeof run>[]).find((r) => r.action === 'rules-status')
   }
   expect(run?.status).toBe('succeeded')
-  expect(run?.tool_version).toBe('0.1.15')
+  expect(run?.tool_version).toBe('0.1.16')
   const log = await (await request.get(`/api/runs/${run!.id}/log`)).text()
   expect(log).toContain('• trustabl: using')
   expect(log).toContain('✓ SHA-256 matches tools.lock.json')
 
   const after = await (await request.get('/api/status')).json()
-  expect(after.tools.trustabl).toMatchObject({ installed: true, reported: '0.1.15', active: '0.1.15' })
+  expect(after.tools.trustabl).toMatchObject({ installed: true, reported: '0.1.16', active: '0.1.16' })
   expect(after.rules?.sha).toMatch(/^[0-9a-f]{40}$/)
 })

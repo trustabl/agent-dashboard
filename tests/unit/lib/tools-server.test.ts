@@ -47,7 +47,7 @@ afterEach(() => {
 })
 
 test('activeVersion defaults to pinned', () => {
-  expect(activeVersion('trustabl')).toBe('0.1.15')
+  expect(activeVersion('trustabl')).toBe('0.1.16')
   expect(activeVersion('autofix')).toBe('0.5.0')
 })
 
@@ -120,7 +120,7 @@ test('ensureInstalled rejects a version that is not X.Y.Z', async () => {
 
 test('ensureInstalled with an override that does not exist throws', async () => {
   process.env.TRUSTABL_BIN = path.join(home, 'nope')
-  await expect(ensureInstalled('trustabl', '0.1.15')).rejects.toThrow(`TRUSTABL_BIN points to ${path.join(home, 'nope')}, which does not exist.`)
+  await expect(ensureInstalled('trustabl', '0.1.16')).rejects.toThrow(`TRUSTABL_BIN points to ${path.join(home, 'nope')}, which does not exist.`)
   expect(calls).toEqual([])
 })
 
@@ -145,8 +145,8 @@ test('toolInfo does not cache a missing binary', async () => {
 test('onToolInstalled fires after a successful install', async () => {
   const seen: [string, string][] = []
   onToolInstalled('test', (n, v) => seen.push([n, v]))
-  await ensureInstalled('trustabl', '0.1.15')
-  expect(seen).toEqual([['trustabl', '0.1.15']])
+  await ensureInstalled('trustabl', '0.1.16')
+  expect(seen).toEqual([['trustabl', '0.1.16']])
   onToolInstalled('test', () => {})
 })
 
@@ -170,10 +170,10 @@ test('checkLatest wraps network errors', async () => {
 })
 
 test('cleanupInstallTemp removes bin/.tmp-*', () => {
-  writeTool('trustabl', '0.1.15')
+  writeTool('trustabl', '0.1.16')
   fs.mkdirSync(path.join(home, 'bin', '.tmp-abc'), { recursive: true })
   cleanupInstallTemp()
-  expect(fs.readdirSync(path.join(home, 'bin'))).toEqual(['trustabl-0.1.15'])
+  expect(fs.readdirSync(path.join(home, 'bin'))).toEqual(['trustabl-0.1.16'])
 })
 
 test('choosing the pinned version follows the pin, not a fixed number', () => {
