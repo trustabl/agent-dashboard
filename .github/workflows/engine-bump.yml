@@ -1,0 +1,99 @@
+# Opens a pull request when the analyzer publishes a release newer than the one
+# tools.lock.json pins.
+#
+# This exists because the alternative is remembering. A pull request is the
+# cheapest thing that makes the gap visible without taking the choice away:
+# nothing changes until a human merges it.
+#
+# The new hashes come from the release's own checksums.txt, so the lock keeps
+# refusing any archive that does not match what the analyzer published.
+name: engine-bump
+
+on:
+  schedule:
+    - cron: '0 7 * * 1'     # Mondays, 07:00 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - id: versions
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          CURRENT=$(node -p "require('./tools.lock.json').tools.trustabl.version")
+          RELEASE=$(gh api repos/trustabl/agent-reliability-analyzer/releases/latest)
+          LATEST=$(echo "$RELEASE" | jq -r '.tag_name | ltrimstr("v")')
+          HAS_SUMS=$(echo "$RELEASE" | jq -r 'any(.assets[]; .name == "checksums.txt")')
+          echo "Pinned $CURRENT, latest $LATEST (checksums.txt published: $HAS_SUMS)"
+          BUMP=false
+          # Only a newer release, and only once its checksums.txt is up (a run
+          # during the release build waits for next week's, or a manual one).
+          if [ "$LATEST" != "$CURRENT" ] && [ "$HAS_SUMS" = true ] &&
+             [ "$(printf '%s\n%s\n' "$CURRENT" "$LATEST" | sort -V | tail -n1)" = "$LATEST" ]; then
+            BUMP=true
+          fi
+          echo "current=$CURRENT" >> "$GITHUB_OUTPUT"
+          echo "latest=$LATEST"   >> "$GITHUB_OUTPUT"
+          echo "bump=$BUMP"       >> "$GITHUB_OUTPUT"
+      - name: Bump the pin, its hashes and the tests that name it
+        if: steps.versions.outputs.bump == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          CURRENT: ${{ steps.versions.outputs.current }}
+          LATEST: ${{ steps.versions.outputs.latest }}
+        run: |
+          SUMS="$RUNNER_TEMP/checksums.txt"
+          gh release download "v$LATEST" --repo trustabl/agent-reliability-analyzer --pattern checksums.txt --output "$SUMS"
+          node -e '
+            const fs = require("fs");
+            const [sumsPath, prev, next] = process.argv.slice(1);
+            const sums = new Map(fs.readFileSync(sumsPath, "utf8").split("\n").filter(Boolean)
+              .map((l) => l.trim().split(/\s+/)).map(([sum, name]) => [name, sum]));
+            const lock = JSON.parse(fs.readFileSync("tools.lock.json", "utf8"));
+            const t = lock.tools.trustabl;
+            const sha256 = {};
+            for (const oldName of Object.keys(t.sha256)) {
+              const name = oldName.replace(`_${prev}_`, `_${next}_`);
+              const sum = sums.get(name);
+              if (name === oldName || !/^[0-9a-f]{64}$/.test(sum ?? "")) {
+                throw new Error(`${name} is not in the v${next} checksums.txt`);
+              }
+              sha256[name] = sum;
+            }
+            t.version = next;
+            t.sha256 = sha256;
+            fs.writeFileSync("tools.lock.json", JSON.stringify(lock, null, 2));
+          ' "$SUMS" "$CURRENT" "$LATEST"
+          # The tests and docs that state the pinned version. src/lib comments
+          # that say which version a parser was checked against stay as they
+          # are until someone re-records the fixtures.
+          grep -rlF "$CURRENT" tests/unit tests/e2e README.md docs/ARCHITECTURE.md |
+            xargs -r perl -pi -e "s/(?<![\d.])\Q$CURRENT\E(?!\d)/$LATEST/g"
+          git diff --stat
+      - uses: peter-evans/create-pull-request@v7
+        if: steps.versions.outputs.bump == 'true'
+        with:
+          branch: chore/analyzer-${{ steps.versions.outputs.latest }}
+          title: "chore(deps): pin the analyzer to ${{ steps.versions.outputs.latest }}"
+          commit-message: "chore(deps): pin the analyzer to ${{ steps.versions.outputs.latest }}"
+          body: |
+            The analyzer released `${{ steps.versions.outputs.latest }}`; `tools.lock.json` pins
+            `${{ steps.versions.outputs.current }}`.
+
+            This pull request moves the pin, takes the four SHA-256 values from the release's
+            `checksums.txt`, and updates the tests and docs that state the pinned version.
+            Nothing is published; the dashboard installs the new pin on its next start.
+
+            Before merging:
+            - CI does not start on its own for a pull request opened by this workflow (GitHub
+              does not trigger workflows from `GITHUB_TOKEN` events). Close and reopen the pull
+              request to run it.
+            - Read the analyzer's release notes, and re-record `tests/fixtures/cli/` and
+              `tests/fixtures/views/` if the output changed (CONTRIBUTING.md, "Bumping a pinned CLI").

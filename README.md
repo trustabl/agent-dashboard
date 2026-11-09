@@ -29,7 +29,7 @@ Policy and telemetry via OpenTelemetry are coming soon.
 | Probe | [agent-network-access-probe](https://github.com/trustabl/agent-network-access-probe) | `autofix fix` |
 
 - Runs on `127.0.0.1` only. There is no login and no user or org model.
-- Pinned CLIs: `trustabl` 0.1.15 and `autofix` 0.5.0. `make run` downloads
+- Pinned CLIs: `trustabl` 0.1.16 and `autofix` 0.5.0. `make run` downloads
   them from their GitHub releases and checks their SHA-256
   (`tools.lock.json`). Newer releases can be installed from the Forge,
   Analyzer and Probe pages.

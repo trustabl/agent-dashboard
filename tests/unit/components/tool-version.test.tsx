@@ -26,7 +26,7 @@ const { ToolVersion, toolBadge } = await import('@/components/console/ToolVersio
 
 beforeEach(() => {
   post.mockClear()
-  tools = { autofix: info(), trustabl: info({ name: 'trustabl', pinned: '0.1.15', active: '0.1.15', path: '/h/bin/trustabl-0.1.15/trustabl', installedVersions: [{ version: '0.1.15', hashSource: 'lock' }] }) }
+  tools = { autofix: info(), trustabl: info({ name: 'trustabl', pinned: '0.1.16', active: '0.1.16', path: '/h/bin/trustabl-0.1.16/trustabl', installedVersions: [{ version: '0.1.16', hashSource: 'lock' }] }) }
 })
 
 const ui = (tool: 'autofix' | 'trustabl' = 'autofix') => render(<ToastProvider><ToolVersion tool={tool} /></ToastProvider>)
@@ -82,7 +82,7 @@ test('Check asks GitHub for the latest release', () => {
 
 test('trustabl modal shows the switching note', () => {
   ui('trustabl')
-  fireEvent.click(screen.getByRole('button', { name: 'trustabl 0.1.15' }))
+  fireEvent.click(screen.getByRole('button', { name: 'trustabl 0.1.16' }))
   expect(screen.getByText(SWITCH_NOTE)).toBeInTheDocument()
 })
 
