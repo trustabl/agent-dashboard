@@ -36,6 +36,12 @@ Policy and telemetry via OpenTelemetry are coming soon.
 - Your source code stays on your machine. Probe sends tool source only to the
   LLM endpoint you configure.
 
+<p align="center">
+  <a href="https://www.star-history.com/#trustabl/agent-reliability-analyzer&trustabl/agent-network-access-probe&trustabl/agent-reliability-skills&Date">
+    <img src="https://api.star-history.com/svg?repos=trustabl/agent-reliability-analyzer,trustabl/agent-network-access-probe,trustabl/agent-reliability-skills&type=Date" alt="GitHub stars over time for agent-reliability-analyzer, agent-network-access-probe and agent-reliability-skills" width="800">
+  </a>
+</p>
+
 ## First run (≈ 5 minutes)
 
 Requirements: macOS, Linux or WSL2, with `git`, `curl`, `tar` and `make`.
